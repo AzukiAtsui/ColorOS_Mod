@@ -58,33 +58,11 @@ umount $target_file
 3. 去除视频锁帧
 4. 去除 ColorOS 高温控制器 部分限制。去除高温锁帧率; 修改GPU、CPU为 -1 ; 去除部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 。
 5. 去除 realme GT模式温控限制，同4. 
-    a. 修改温控 高温保护数值
-    
-    ```bash
-    sed -i 's/camera_temperature_limit>[0-9]*</camera_temperature_limit>600</g' ./test && echoRgb "已修改camera_temperature_limit为600"
-    sed -i 's/ToleranceFirstStepIn>[0-9]*</ToleranceFirstStepIn>600</g' ./test && echoRgb "已修改ToleranceFirstStepIn为600"
-    sed -i 's/ToleranceFirstStepOut>[0-9]*</ToleranceFirstStepOut>580</g' ./test && echoRgb "已修改ToleranceFirstStepOut为580"
-    sed -i 's/ToleranceSecondStepIn>[0-9]*</ToleranceSecondStepIn>620</g' ./test && echoRgb "已修改ToleranceSecondStepIn为620"
-    sed -i 's/ToleranceSecondStepOut>[0-9]*</ToleranceSecondStepOut>600</g' ./test && echoRgb "已修改ToleranceSecondStepOut为600"
-    sed -i 's/ToleranceStart>[0-9]*</ToleranceStart>540</g' ./test && echoRgb "已修改ToleranceStart为540"
-    sed -i 's/ToleranceStop>[0-9]*</ToleranceStop>520</g' ./test && echoRgb "已修改ToleranceStop为520"
-    
-    ```
-    
-    b. 修改温控数值
-    
-    ```bash
-    sed -i 's/more_heat_threshold>[0-9]*</more_heat_threshold>600</g' ./test && echoRgb "已修改more_heat_threshold为600"
-    sed -i 's/<heat_threshold>[0-9]*</<heat_threshold>580</g' ./test && echoRgb "已修改heat_threshold为580"
-    sed -i 's/less_heat_threshold>[0-9]*</less_heat_threshold>560</g' ./test && echoRgb "已修改less_heat_threshold为560"
-    sed -i 's/preheat_threshold>[0-9]*</preheat_threshold>540</g' ./test && echoRgb "已修改preheat_threshold为540"
-    sed -i 's/preheat_dex_oat_threshold>[0-9]*</preheat_dex_oat_threshold>520</g' ./test && echoRgb "已修改preheat_dex_oat_threshold为520"
-    
-    ```
-    
-6. 开机自启允许名单 部分尝试
-7. 应用分身数量限制改为 999
-8. 锁定后台数量限制改为 999
+6. 修改温控 高温保护数值
+7. 修改温控数值
+8. 开机自启允许名单 部分尝试
+9. 应用分身数量限制改为 999
+10. 锁定后台数量限制改为 999
 
 # 感谢
 

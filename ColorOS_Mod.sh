@@ -58,8 +58,8 @@ echo " - 开始编辑ColorOS 屏幕刷新率应用配置文件：$source_rrc 并
 cp -rf $source_rrc ./test
 sed -i 's/rateId=\"[0-9]-[0-9]-[0-9]-[0-9]/rateId=\"3-1-2-3/g' ./test || echoRgb "修改高刷名单失败" 0
 # sed -i 's/enableRateOverride=\"true/enableRateOverride=\"false/g' ./test && echoRgb "surfaceview，texture场景不降"
-sed -i 's/disableViewOverride=\"true/disableViewOverride=\"false/g' ./test && echoRgb "disableViewOverride已关闭"
-sed -i 's/inputMethodLowRate=\"true/inputMethodLowRate=\"false/g' ./test && echoRgb "输入法降帧false关闭"
+sed -i 's/disableViewOverride=\"true/disableViewOverride=\"false/g' ./test && echoRgb "已关闭disableViewOverride"
+sed -i 's/inputMethodLowRate=\"true/inputMethodLowRate=\"false/g' ./test && echoRgb "已关闭输入法降帧"
 mv -f ./test $target_rrc
 chmod 444 $target_rrc
 echoRgb "修改ColorOS 应用刷新率重点应用名单完成，未在名单内应用享受系统设置刷新率" "1"
@@ -79,7 +79,7 @@ echo " - 开始编辑ColorOS 动态刷新率(adfr)文件：$source_ovc 并将其
 cp -rf $source_ovc ./test
 # sed '/address_start_line/,/address_end_line/ d ' ; # 区间行
 sed -i '/\"blacklist\"/,/[\s\S]*\s*\]/d' ./test && echoRgb "已删除黑名单"
-sed -i -e '/"timeout": [0-9]*,/d'  -e '/"hw_brightness_limit": [0-9]*,/d'  -e '/"hw_gray": true,/d'  -e '/"hw_gray_threshold": [0-9]*,/d'  -e '/"hw_gray_percent": [0-9]*,/d' ./test && echoRgb "删除多余内容成功"
+sed -i -e '/"timeout": [0-9]*,/d'  -e '/"hw_brightness_limit": [0-9]*,/d'  -e '/"hw_gray": true,/d'  -e '/"hw_gray_threshold": [0-9]*,/d'  -e '/"hw_gray_percent": [0-9]*,/d' ./test && echoRgb "已删除多余内容"
 mv -f ./test $target_ovc
 chmod 444 $target_ovc
 echoRgb "修改ColorOS 动态刷新率(adfr)对应的文件完成" "1"
@@ -98,7 +98,7 @@ if [[ -e $source_mdpl ]]
 then
 echo " - 开始编辑ColorOS 视频播放器帧率控制文件：$source_mdpl 并将其“热更新”到$target_mdpl 和$target_mdpl_1"
 cp -rf $source_mdpl ./test
-sed -i -e '/<fps>/d' -e '/<vsync>/d' ./test && echoRgb "已去除锁帧、垂直同步设置"
+sed -i -e '/<fps>/d' -e '/<vsync>/d' ./test && echoRgb "已删除锁帧、垂直同步设置"
 cp -f ./test $target_mdpl_1
 mv -f ./test $target_mdpl
 chmod 444 $target_mdpl
@@ -116,28 +116,27 @@ source_stcc=/odm/etc/temperature_profile/sys_thermal_control_config.xml
 target_stcc=$ds/sys_thermal_control_config.xml
 if [[ -e $source_stcc ]]
 then
-echo " - 开始编辑ColorOS 温控控制器文件：$source_stcc 并将其“热更新”到$target_stcc"
+echo " - 开始编辑ColorOS 高温控制器文件：$source_stcc 并将其“热更新”到$target_stcc"
 cp -rf $source_stcc ./test
-# 备份腾讯QQ specificScene
 # sed -n '/com\.tencent\.mobileqq_103/=' ./test | sed -n "2"p ; # 输出第二次匹配行号
 sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' ./test >./specificScene && echoRgb "已备份腾讯QQ specificScene"
-sed -i '/specificScene/,/\/specificScene/d' ./test && echoRgb "已删除 specificScene 与 /specificScene 之间行"
+sed -i '/specificScene/,/\/specificScene/d' ./test && echoRgb "已删除 specificScene 与 /specificScene 区间行"
 sed -i '/\/screenOff/ r specificScene' ./test && rm -rf specificScene &&  echoRgb "已写回腾讯QQ specificScene" "1"
-# 备份相机 specific
 sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' ./test >./specific && echoRgb "已备份相机 specific"
-sed -i '/specific>/,/\/specific>*/d' ./test && echoRgb "已删除 specific与 /specific 之间行"
-sed -i '/\/specificScene/ r specific' ./test && rm -rf specific && echoRgb "已写回相机 specific" "1"
+sed -i '/specific>/,/\/specific>*/d' ./test && echoRgb "已删除 specific 与 /specific 区间行"
+sed -i '/\/specificScene/ r specific' ./test && rm -rf specific && echoRgb "已写回Oplus相机 specific" "1"
+sed -i '/^[  ]*$/d' ./test && rm -rf specific && echoRgb "已删除空行"
 sed -i 's/fps=\"[0-9]*/fps=\"0/g' ./test && echoRgb "已关闭温控锁帧率"
 sed -i 's/cpu=\".*\" g/cpu=\"-1\" g/g' ./test && echoRgb "CPU -1"
-sed -i 's/gpu=\".*\"\s/gpu=\"-1\"\a/g' ./test && echoRgb "GPU -1"
+sed -i 's/gpu=\".*\" r/gpu=\"-1\" r/g' ./test && echoRgb "GPU -1"
 sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' ./test && echoRgb "相机亮度 255"
-sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/gpu=\"[0-9]*/gpu=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' ./test && echoRgb "去除 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 限制成功"
+sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' ./test && echoRgb "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
 mv -f ./test $target_stcc
 chmod 444 $target_stcc
 echoRgb "修改ColorOS 温控控制器文件完成" "1"
 echoRgb "ColorOS 温控锁帧及其它限制已解除。" "1"
 else
-  echoRgb "不存在ColorOS 温控控制器文件" "0"
+  echoRgb "不存在ColorOS 高温控制器文件" "0"
 fi
 
 
@@ -151,22 +150,23 @@ then
 echo " - 开始编辑 realme GT模式温控控制器文件：$source_stcc_gt 并将其“热更新”到$target_stcc_gt"
 cp -rf $source_stcc_gt ./test
 sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' ./test >./specificScene && echoRgb "已备份腾讯QQ specificScene"
-sed -i '/specificScene/,/\/specificScene/d' ./test && echoRgb "已删除 specificScene 与 /specificScene 之间行"
+sed -i '/specificScene/,/\/specificScene/d' ./test && echoRgb "已删除 specificScene 与 /specificScene 区间行"
 sed -i '/\/screenOff/ r specificScene' ./test && rm -rf specificScene &&  echoRgb "已写回腾讯QQ specificScene" "1"
-sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' ./test >./specific && echoRgb "已备份相机 specific"
-sed -i '/specific>/,/\/specific>*/d' ./test && echoRgb "已删除 specific与 /specific 之间行"
-sed -i '/\/specificScene/ r specific' ./test && rm -rf specific && echoRgb "已写回相机 specific" "1"
+sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' ./test >./specific && echoRgb "已备份Oplus相机 specific"
+sed -i '/specific>/,/\/specific>*/d' ./test && echoRgb "已删除 specific 与 /specific 区间行"
+sed -i '/\/specificScene/ r specific' ./test && rm -rf specific && echoRgb "已写回Oplus相机 specific" "1"
+sed -i '/^[  ]*$/d' ./test && rm -rf specific && echoRgb "已删除空行"
 sed -i 's/fps=\"[0-9]*/fps=\"0/g' ./test && echoRgb "已关闭温控锁帧率"
 sed -i 's/cpu=\".*\" g/cpu=\"-1\" g/g' ./test && echoRgb "CPU -1"
-sed -i 's/gpu=\".*\"\s/gpu=\"-1\"\a/g' ./test && echoRgb "GPU -1"
+sed -i 's/gpu=\".*\" r/gpu=\"-1\" r/g' ./test && echoRgb "GPU -1"
 sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' ./test && echoRgb "相机亮度 255"
-sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/gpu=\"[0-9]*/gpu=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' ./test && echoRgb "去除 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 限制成功"
+sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' ./test && echoRgb "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
 mv -f ./test $target_stcc_gt
 chmod 444 $target_stcc_gt
 echoRgb "修改 realme GT模式温控控制器文件完成" "1"
 echoRgb "GT模式温控锁帧及其它限制已解除" "1"
 else
-  echoRgb "不存在 realme GT模式温控控制器文件" "0"
+  echoRgb "不存在 realme GT模式高温控制器文件" "0"
 fi
 
 
@@ -214,7 +214,7 @@ sed -i -e 's/HighTemperatureDisableFlashSwitch>true/HighTemperatureDisableFlashS
 sed -i -e 's/HighTemperatureDisableFlashChargeSwitch>true/HighTemperatureDisableFlashChargeSwitch>false/g' ./test && echoRgb "已关闭高温禁用闪充，充就完了"
 sed -i -e 's/HighTemperatureControlVideoRecordSwitch>true/HighTemperatureControlVideoRecordSwitch>false/g' ./test && echoRgb "已关闭高温视频录制控制"
 # 删除
-  sed -i -e '/HighTemperatureShutdownUpdateTime/d' -e '/HighTemperatureProtectFirstStepIn/d' -e '/HighTemperatureProtectFirstStepOut/d' -e '/HighTemperatureProtectThresholdIn/d' -e '/HighTemperatureProtectThresholdOut/d' -e '/HighTemperatureProtectShutDown/d' -e '/HighTemperatureDisableFlashLimit/d' -e '/HighTemperatureEnableFlashLimit/d' -e '/HighTemperatureDisableFlashChargeLimit/d' -e '/HighTemperatureEnableFlashChargeLimit/d' -e '/HighTemperatureDisableVideoRecordLimit/d' -e '/HighTemperatureEnableVideoRecordLimit/d' ./test && echoRgb "删除部分 Time In/Out Dis/Enable 项"
+  sed -i -e '/HighTemperatureShutdownUpdateTime/d' -e '/HighTemperatureProtectFirstStepIn/d' -e '/HighTemperatureProtectFirstStepOut/d' -e '/HighTemperatureProtectThresholdIn/d' -e '/HighTemperatureProtectThresholdOut/d' -e '/HighTemperatureProtectShutDown/d' -e '/HighTemperatureDisableFlashLimit/d' -e '/HighTemperatureEnableFlashLimit/d' -e '/HighTemperatureDisableFlashChargeLimit/d' -e '/HighTemperatureEnableFlashChargeLimit/d' -e '/HighTemperatureDisableVideoRecordLimit/d' -e '/HighTemperatureEnableVideoRecordLimit/d' ./test && echoRgb "已删除部分 Time In/Out Dis/Enable 项"
 # 修改数值
     sed -i 's/camera_temperature_limit>[0-9]*</camera_temperature_limit>600</g' ./test && echoRgb "已修改camera_temperature_limit为600"
     sed -i 's/ToleranceFirstStepIn>[0-9]*</ToleranceFirstStepIn>600</g' ./test && echoRgb "已修改ToleranceFirstStepIn为600"
@@ -225,7 +225,7 @@ sed -i -e 's/HighTemperatureControlVideoRecordSwitch>true/HighTemperatureControl
     sed -i 's/ToleranceStop>[0-9]*</ToleranceStop>520</g' ./test && echoRgb "已修改ToleranceStop为520"
 # 省事方案
 # sed -i 's/isOpen>1</isOpen>0</g' ./test && echoRgb "已关闭高温保护机制"
-# sed -i '/switch/,/[0-9]/d' ./test && echoRgb "删除各项高温保护机制分行"
+# sed -i '/switch/,/[0-9]/d' ./test && echoRgb "已删除各高温保护机制行"
 mv -f ./test $target_shtp
 chmod 444 $target_shtp
 echoRgb "修改ColorOS 高温保护文件完成" "1"
@@ -244,11 +244,11 @@ if [[ -e $source_stc ]]
 then
 echo " - 开始编辑ColorOS 温控文件：$source_stc 并将其“热更新”到$target_stc"
 cp -rf $source_stc ./test
-sed -i 's/is_upload_dcs>1/is_upload_dcs>0/g' ./test && echoRgb "关闭is_upload_dcs"
-sed -i 's/thermal_battery_temp>1/thermal_battery_temp>0/g' ./test && echoRgb "关闭thermal_battery_temp"
+sed -i 's/is_upload_dcs>1/is_upload_dcs>0/g' ./test && echoRgb "已关闭is_upload_dcs"
+sed -i 's/thermal_battery_temp>1/thermal_battery_temp>0/g' ./test && echoRgb "已关闭thermal_battery_temp"
 # 删除
   sed -i '/thermal_heat_path/d' ./test && echoRgb "已删除thermal_heat_path"; # thermal_heat_path>/sys/class/thermal/thermal_zone49/temp
-  sed -i -e '/<\!--/d' ./test && echoRgb "删除注释行"
+  sed -i -e '/<\!--/d' ./test && echoRgb "已删除注释行"
 # 修改数值
     sed -i 's/more_heat_threshold>[0-9]*</more_heat_threshold>600</g' ./test && echoRgb "已修改more_heat_threshold为600"
     sed -i 's/<heat_threshold>[0-9]*</<heat_threshold>580</g' ./test && echoRgb "已修改heat_threshold为580"
@@ -257,7 +257,7 @@ sed -i 's/thermal_battery_temp>1/thermal_battery_temp>0/g' ./test && echoRgb "�
     sed -i 's/preheat_dex_oat_threshold>[0-9]*</preheat_dex_oat_threshold>520</g' ./test && echoRgb "已修改preheat_dex_oat_threshold为520"
 # 省事方案
 # sed -i 's/isOpen>1</isOpen>0</g' ./test && echoRgb "已关闭温控机制"
-# sed -i '/more/,/[0-9]/d' ./test && echoRgb "删除温控分行"
+# sed -i '/more/,/[0-9]/d' ./test && echoRgb "已删除温控机制行"
 mv -f ./test $target_stc
 chmod 444 $target_stc
 echoRgb "修改ColorOS 温控文件完成" "1"
@@ -346,6 +346,7 @@ sed -i '/lock_app_limit/ s/value="[0-9]*/value="999/' ./test && echoRgb "已修�
 mv -f ./test $source_bgApp
 chmod 444 $source_bgApp
 echoRgb "修改ColorOS 12 Oplus桌面的锁定后台数量限制文件完成" "1"
+echoRgb "此项在重启后生效" "0"
 else
   echoRgb "不存在ColorOS 12 Oplus桌面的锁定后台数量限制文件" "0"
 fi
@@ -358,6 +359,19 @@ fi
 
 # realme GT Neo2 Android 12 深色模式文件位置更新为：/data/oplus/os/darkmode/sys_dark_mode_third_app_managed.xml 
 # OnePlus 9 Pro ColorOS 12 深色模式文件位置更新为：/data/oppo/coloros/darkmode/sys_dark_mode_third_app_managed.xml ; # 其中记录了可以强制启用深色模式的app包名，添加应用保存即可，不用重启 
+
+
+
+
+re_bak() {
+mv -f $1 ${1%.*}
+}
+if [[ $chkRec = 1 ]]
+then
+rm -f $target_smac $target_stc $target_shtp $target_stcc_gt $target_stcc $target_mdpl $target_ovc $target_rrc
+re_bak $bak_bootallow
+re_bak $bak_bgApp
+fi
 
 
 echoRgb "\n\n\n - 运行完成" "0"
