@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022 酷安@灼热的红豆
+# Copyright (C) 2022 AzukiAtsui
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,47 @@
 # limitations under the License.
 #
 
-# shell script by 酷安@灼热的红豆;
-# e-mail address: AzukiAtsui@163.com
+# This file would not be updated since the ColorOS_Mod-MagiskModule works better and more powerful. 2022-08-29
 
-# 删掉下面一行的 "#" 符号，重新运行脚本，即可删掉脚本创建的修改文件，恢复备份
+
+
+
+# 删掉下面一行的 "#" 符号，重新运行脚本，即可删掉脚本创建的“热更新”文件，恢复备份
 # chkRecCOSM=1
+
+
+
+
+# # 脚本说明
+
+# | 函数 | 功能 |
+# | --- | --- |
+# | echoRgb | 转换echo颜色提高可读性 |
+# | abort | 红色echo并exit 1 |
+# | re_bak | 对 /data/ 内的可读写配置文件，使用 .后缀 的备份覆盖原名配置文件 |
+# | echoBoundary | 输出分界 |
+
+# | 变量 | 说明 |
+# | --- | --- |
+# | source_file | 源配置文件 |
+# | target_file | “热更新”文件，通常 target_file=/data/system/${source_file##*/} |
+# | source_file_edited | 复制源文件到可读写目录然后修改，默认为脚本目录 ./test 文件。如果需要 mount 挂载则自定义。 |
+# | ds | ds=/data/system 缩写减少字节😂 |
+# | appPackagesName | 列出应用包名，-e 启用的，-3 第三方 |
+# | bak_file | 备份可读写目录下的配置文件，默认"${source_file}.bak”； 请保持备份文件名为 “ 原文件名 + . + 后缀 ” 的格式，方便 re_bak 去掉 “.后缀” 恢复 |
+
+# ## “热更新”修改机制说明
+
+# _对部分文件不生效，建议改用 [Magisk模块](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) _ 的形式——在 [Releases](https://github.com/AzukiAtsui/ColorOS_Mod/releases) 下载 _ColorOS_Mod-MagiskModule.zip_ ；
+
+# ```bash
+# mv -f $source_file $target_file
+# ```
+
+# 系统自动对比 /data/system/目录下同名文件 与底层分区内同名文件的时间，使用更新的文件参数。
+
+
+
 
 echoRgb() {
 	if [[ $2 = 0 ]];then
@@ -30,14 +66,17 @@ echoRgb() {
 	fi
 }
 
+
 abort() {
 echoRgb "$1" "0"
 exit 1
 }
 
+
 if [ "$(whoami)" != root ];then
 	abort "你是憨批？不给Root用你妈！爬！"
 fi
+
 
 re_bak() {
 if [[ -e $1 ]];then
@@ -47,8 +86,9 @@ if [[ -e $1 ]];then
 fi
 }
 
+
 echoBoundary() {
-# sleep 1
+sleep 1
 echo -e '\n\n'
 }
 
@@ -67,7 +107,7 @@ if [[ -e $source_rrc ]];then
 target_rrc=$ds/refresh_rate_config.xml
 echo " - 开始编辑ColorOS 屏幕刷新率应用配置文件：$source_rrc 并将其“热更新”到$target_rrc"
 	cp -rf $source_rrc ./test
-	sed -i 's/rateId=\"[0-9]-[0-9]-[0-9]-[0-9]/rateId=\"3-1-2-3/g' ./test || echoRgb "修改高刷名单失败" 0
+	sed -i 's/rateId=\"[0-9]-[0-9]-[0-9]-[0-9]/rateId=\"3-1-2-3/g' ./test || abort "修改高刷名单失败"
 	sed -i 's/enableRateOverride=\"true/enableRateOverride=\"false/g' ./test && echoRgb "surfaceview，texture场景不降"
 	sed -i 's/disableViewOverride=\"true/disableViewOverride=\"false/g' ./test && echoRgb "已关闭disableViewOverride"
 	sed -i 's/inputMethodLowRate=\"true/inputMethodLowRate=\"false/g' ./test && echoRgb "已关闭输入法降帧"
@@ -145,7 +185,7 @@ fi
 
 
 echoBoundary
-# 去除 realme GT模式游戏锁帧率 fps="0; 修改GPU、CPU为 -1 ; 限制 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 后面的值都改成0
+# 去除 realme GT模式游戏锁帧率: fps="0; 修改GPU、CPU为 -1 ; 限制 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 后面的值都改成0
 source_stcc_gt=/odm/etc/temperature_profile/sys_thermal_control_config_gt.xml
 if [[ -e $source_stcc_gt ]];then
 target_stcc_gt=$ds/sys_thermal_control_config_gt.xml
@@ -262,6 +302,7 @@ fi
 
 
 # /system_ext/etc/horae 有加密温控文件
+# 修改见 _ColorOS_Mod-MagiskModule.zip_ 的 customize.sh
 
 
 echoBoundary
@@ -330,20 +371,19 @@ for source_bootallow in /data/oppo/coloros/startup/bootallow.txt /data/oplus/os/
 do
 bak_bootallow="${source_bootallow}.bak"
 	if [[ -e $source_bootallow && ! -e $bak_bootallow ]];then
-		echo " - 开始编辑ColorOS 12 开启自启应用名单文件：$source_bootallow 并创建其备份文件：$bak_bootallow"
+		echo " - 开始编辑ColorOS 12 开机自启允许应用名单文件：$source_bootallow 并创建其备份文件：$bak_bootallow"
 		cp -rf $source_bootallow $bak_bootallow
 		cp -rf $source_bootallow ./test
 			for appPakageName in $appPackagesName
 			do
 				sed -i '/'$appPakageName'$/d' ./test
-				sed -i '$a'$appPakageName ./test && echoRgb "已去重添加APP: $appName 包名：$appPakageName 到自启白名单"
+				sed -i '$a'$appPakageName ./test && echoRgb "已去重添加APP: $appName 包名：$appPakageName 到开机自启允许名单"
 			done
 		mv -f ./test $source_bootallow
 		chmod 700 $source_bootallow
-		echoRgb "修改ColorOS 12 开启自启应用名单文件完成" "1"
-		echoRgb "不在 自启白名单(bootwhitelist.txt) 中的app 会占用“不推荐自启”的名额。" "0"
+		echoRgb "修改ColorOS 12 开启自启允许应用名单文件完成" "1"
 	elif [[ -e $bak_bootallow ]];then
-		echoRgb "检测到备份文件，跳过修改ColorOS 12 开启自启应用名单文件" "1"
+		echoRgb "检测到备份文件，跳过修改ColorOS 12 开机自启允许应用名单文件" "1"
 	fi
 done
 
@@ -436,6 +476,7 @@ if [[ $chkRecCOSM = 1 ]];then
 	echoRgb "已删掉脚本创建的修改文件，恢复备份。" "1"
 fi
 
+
 echoRgb "\n\n\n - 脚本运行完毕" "1"
 # Thanks to Anharmony@coolapk, 咸鱼C@coolapk, JasonLiao@coolapk.
-# by AzukiAtsui 2022-08-27
+# by AzukiAtsui 2022-08-28
