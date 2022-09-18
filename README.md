@@ -1,19 +1,8 @@
 # ColorOS_Mod
 
+[English version](https://github.com/AzukiAtsui/ColorOS_Mod/README-en.md)
+
 以 [Magisk模块](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) 的形式，在模块安装过程中提取 ColorOS 或 realmeUI 底层温控、自启/应用分身名单等并加以**修改**，systemless 挂载修改后的文件来实现更舒服的系统体验。禁用或卸载模块即禁用修改。
-
-# 作者信息
-
-Shell script by 酷安@灼热的红豆;
-
-e-mail address: [AzukiAtsui@163.com](mailto:AzukiAtsui@163.com) .
-
-### INSTRUCTIONS
-
-1. download _ColorOS_Mod-MagiskModule.zip_ in [Releases](https://github.com/AzukiAtsui/ColorOS_Mod/releases);
-2. start Magisk app, switch to the "Modules" page;
-3. click "Install from the storage" and select the _ColorOS_Mod-MagiskModule.zip_ downloaded from [Releases](https://github.com/AzukiAtsui/ColorOS_Mod/releases);
-4. wait for Successful Installation then reboot.
 
 ### 使用说明
 
@@ -22,14 +11,30 @@ e-mail address: [AzukiAtsui@163.com](mailto:AzukiAtsui@163.com) .
 3. 点“从本地安装”，选中在 [Releases](https://github.com/AzukiAtsui/ColorOS_Mod/releases) 下载的 _ColorOS_Mod-MagiskModule.zip_ ；
 4. 等待安装完成，然后重启。
 
+### 预编译的二进制文件
+
+- [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) ，来自 AOSP
+- [dtc](https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
+- [bash](https://ftp.gnu.org/gnu/bash/) ，来自 [GNU Project](https://www.gnu.org/software/bash/) 。[bash-5.2-rc4 备份](https://pan.baidu.com/s/1bHtUdheyBgIwixLqpycgHg?pwd=bash) 提取码:bash
+
+了解更多：[ColorOS_Mod 主页](https://azukiatsui.github.io/ColorOS_Mod/index.md)
+
 # 更新日志
 
-## **v1.2** by   AzukiAtsui   2022-08-27
+## **MagiskModule_v1.1.0** by   AzukiAtsui   2022-09-18
+
+1. 尝试激活内存拓展（hybridswap）
+2. 修改 dtbo 配置
+3. 默认关闭温控节点修改
+4. 提高掉落4G后回升5G概率
+5. 修复已知问题
+
+## **ScriptFile_v1.2** by   AzukiAtsui   2022-08-27
 
 1. 分别添加所有第三方APP包名到自启白名单、开机自启允许名单、应用分身名单、三方应用暗色名单
 2. 禁用支付安全环境扫描
 
-## **v1** by   AzukiAtsui   2022-08-21
+## **ScriptFile_v1** by   AzukiAtsui   2022-08-21
 
 _v1.1 修复v1 中gpu值修改出错，增加删除空行_
 
@@ -43,9 +48,3 @@ _v1.1 修复v1 中gpu值修改出错，增加删除空行_
 8. 开机自启允许名单 部分尝试
 9. 应用分身数量限制改为 999
 10. 锁定后台数量限制改为 999
-
-# 感谢
-
-Anharmony@coolapk, realme UI 3.0 教程。
-
-咸鱼C@coolapk & JasonLiao@coolapk, OnePlus 9 Pro ColorOS 12 教程。

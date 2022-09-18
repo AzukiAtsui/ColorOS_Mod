@@ -1,8 +1,7 @@
-# This file is part of ColorOS_Mod;
-# repo: https://github.com/AzukiAtsui/ColorOS_Mod
 id=coloros_mod
 name=ColorOS_Mod
-version=v1.0.1(220829)
-versioncode=101
-author=酷安@灼热的红豆
-description=systemless 修改ColorOS 或 realmeUI 底层文件，包括删温控、去除锁帧、添加第三方应用包名到暗色、自启和应用分身名单等，详见 github.com/AzukiAtsui/ColorOS_Mod#更新日志 。禁用或卸载模块后不影响系统。安装新应用需重新安装模块来更新名单。
+version=v1.1.0(2209181)
+versioncode=2209181
+author=AzukiAtsui
+description=Modify ColorOS and realmeUI configs. Repo: https://github.com/AzukiAtsui/ColorOS_Mod
+updateJson=https://azukiatsui.github.io/ColorOS_Mod/release/main.json
