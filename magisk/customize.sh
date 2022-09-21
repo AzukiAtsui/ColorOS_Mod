@@ -62,7 +62,7 @@ src_stcc=/odm/etc/temperature_profile/sys_thermal_control_config.xml
 # 去除 realme GT模式游戏锁帧率: fps="0; 修改GPU、CPU为 -1 ; 限制 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 后面的值都改成0
 src_stcc_gt=/odm/etc/temperature_profile/sys_thermal_control_config_gt.xml
 
-# 修改温控 高温保护
+# 修改高温保护
 src_shtp=/odm/etc/temperature_profile/$(for i in /odm/etc/temperature_profile/sys_high_temp_protect*.xml;do echo ${i##*/};done)
 
 # 修改温控
@@ -80,12 +80,12 @@ src_apn=/system/product/etc/apns-conf.xml
 # 内存拓展
 list_hybridswap=$(ls -l /sys/block/zram0/hybridswap_* | grep ^'\-rw\-' | awk '{print $NF}')
 
-# 应用分身/App Cloner; Android 12 ~ 13 同路径
+# 应用分身/App cloner; Android 12 ~ 13 同路径
 ## src_smac=$(find /system /system_ext -type f -name sys_multi_app_config.xml | sed 1n) ; # 文件名查找文件费时间
 for i in /system_ext/oppo/sys_multi_app_config.xml /system_ext/oplus/sys_multi_app_config.xml;do
 	[ -f $i ] && src_smac=$i
 	if [ -z $src_smac ];then
-		echo " ✘ 不存在ColorOS 应用分身/App Cloner 配置文件：$i" >&2
+		echo " ✘ 不存在应用分身/App cloner 配置文件：$i" >&2
 	else
 		break
 	fi
@@ -95,7 +95,7 @@ done
 for i in /data/oppo/coloros/startup/startup_manager.xml /data/oplus/os/startup/startup_manager.xml;do
 	[ -f $i ] && src_blacklistMv=$i
 	if [ -z $src_blacklistMv ];then
-		echo " ✘ 不存在ColorOS 启动管理：$i" >&2
+		echo " ✘ 不存在欧加启动管理：$i" >&2
 	else
 		break
 	fi
@@ -104,7 +104,7 @@ done
 for i in /data/oppo/coloros/startup/sys_startup_v3_config_list.xml /data/oplus/os/startup/sys_startup_v3_config_list.xml;do
 	[ -f $i ] && src_blacklistMv3c=$i
 	if [ -z $src_blacklistMv3c ];then
-		echo " ✘ 不存在ColorOS 系统启动V3配置表：$i" >&2
+		echo " ✘ 不存在欧加系统启动V3配置表：$i" >&2
 	else
 		break
 	fi
@@ -120,11 +120,11 @@ for i in /data/oppo/coloros/startup/bootwhitelist.txt /data/oplus/os/startup/boo
 	fi
 done
 
-# ColorOS 关联启动白名单
+# 关联启动白名单
 for i in /data/oppo/coloros/startup/associate_white_list.txt /data/oplus/os/startup/associate_white_list.txt;do
 	[ -f $i ] && src_acwl=$i
 	if [ -z $src_acwl ];then
-		echo " ✘ 不存在ColorOS 关联启动白名单：$i" >&2
+		echo " ✘ 不存在关联启动白名单：$i" >&2
 	else
 		break
 	fi
@@ -157,7 +157,7 @@ fi
 for i in /data/oplus/os/darkmode/sys_dark_mode_third_app_managed.xml /data/oppo/coloros/darkmode/sys_dark_mode_third_app_managed.xml;do
 	[ -f $i ] && src_sdmtam=$i
 	if [ -z $src_sdmtam ];then
-		echo " ✘ 不存在ColorOS 暗色模式第三方应用管理名单文件：$i" >&2
+		echo " ✘ 不存在暗色模式第三方应用管理名单文件：$i" >&2
 	else
 		break
 	fi
@@ -286,6 +286,14 @@ blMv() {
 	sed -i '/^[[:space:]]*$/d' $pfd ;# 删除空行
 }
 
+chkFUN() {
+if [ -z $1 ];then
+echo "未定义 $2 文件"
+else
+$3 $1 $2
+fi
+}
+
 
 
 
@@ -321,85 +329,69 @@ fi
 
 echo2n
 FUN_fccas() {
-if [ -f $src_fccas ];then
-	mountPfd $src_fccas
-	echo "－开始编辑ColorOS 13 系统设置特性配置文件：$src_fccas"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i 's/<app_feature name=\"com.android.systemui.disable_fp_blind_unlock\"\/>//g' $pfd || abort "未知错误！请联系开发者修复！"
 	echo "已去除对息屏指纹盲解的禁用"
 	blMv
-	echo "修改ColorOS 13 系统设置特性配置文件完成"
+	echo "修改$2文件完成"
 else
-	echo " ✘ 不存在ColorOS 13 系统设置特性配置文件：$src_fccas" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_fccas ];then
-echo "未定义 ColorOS 13 系统设置特性配置 文件"
-else
-FUN_fccas
-fi
+chkFUN $src_fccas "ColorOS 13 系统设置特性配置" FUN_fccas
 
 echo2n
 FUN_rcc(){
-if [ -f $src_rrc ];then
-	mountPfd $src_rrc
-	echo "－开始编辑ColorOS 屏幕刷新率应用配置文件：$src_rrc"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i 's/rateId=\"[0-9]-[0-9]-[0-9]-[0-9]/rateId=\"3-1-2-3/g' $pfd && echo "已全局改刷新率模式为 3-1-2-3"
 	sed -i 's/enableRateOverride="true/enableRateOverride="false/g' $pfd && echo "surfaceview，texture场景不降"
 	sed -i 's/disableViewOverride="true/disableViewOverride="false/g' $pfd && echo "已关闭disableViewOverride"
 	sed -i 's/inputMethodLowRate="true/inputMethodLowRate="false/g' $pfd && echo "已关闭输入法降帧"
 	blMv
-	echo -e "修改ColorOS 屏幕刷新率重点应用名单完成\n注意：系统设置刷新率仍然生效"
+	echo -e "修改$2完成\n注意：系统设置刷新率仍然生效"
 else
-	echo " ✘ 不存在ColorOS 屏幕刷新率应用配置文件：$src_rrc" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_rrc ];then
-echo "未定义 屏幕刷新率应用配置 文件"
-else
-FUN_rcc
-fi
+chkFUN $src_rrc "屏幕刷新率重点应用名单" FUN_rcc
 
 echo2n
 FUN_ovc(){
-if [ -f $src_ovc ];then
-	mountPfd $src_ovc
-	echo "－开始编辑ColorOS 动态刷新率(adfr)文件：$src_ovc"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i '/\"blacklist\"/,/[\s\S]*\s*\]/d' $pfd && echo "已删除黑名单"
 	sed -i -e '/"timeout": [0-9]*,/d' -e '/"hw_brightness_limit": [0-9]*,/d' -e '/"hw_gray": true,/d' -e '/"hw_gray_threshold": [0-9]*,/d' -e '/"hw_gray_percent": [0-9]*,/d' $pfd && echo "已删除多余内容"
-	echo "修改ColorOS 动态刷新率(adfr) 文件完成"
+	echo "修改$2 文件完成"
 else
-	echo " ✘ 不存在ColorOS 动态刷新率(adfr) 文件：$src_ovc" >&2
+	echo " ✘ 不存在$2 文件：$1" >&2
 fi
 }
-if [ -z $src_ovc ];then
-echo "未定义 ColorOS 动态刷新率(adfr) 文件"
-else
-FUN_ovc
-fi
+chkFUN $src_ovc "动态刷新率(adfr)" FUN_ovc
 
 echo2n
 FUN_mdpl(){
-if [ -f $src_mdpl ];then
-	mountPfd $src_mdpl
-	echo "－开始编辑ColorOS 视频播放器帧率控制文件：$src_mdpl"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i -e '/<fps>/d' -e '/<vsync>/d' $pfd && echo "已删除锁帧、垂直同步设置"
 	blMv
-	echo -e "修改ColorOS 视频播放器帧率控制文件完成\n设置120hz时，播放视频可120hz"
+	echo -e "修改$2文件完成\n设置120hz时，播放视频可120hz"
 else
-	echo " ✘ 不存在ColorOS 视频播放器帧率控制文件：$src_mdpl" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_mdpl ];then
-echo "未定义 ColorOS 视频播放器帧率控制 文件"
-else
-FUN_mdpl
-fi
+chkFUN $src_mdpl "视频播放器帧率控制" FUN_mdpl
 
 echo2n
 FUN_stcc(){
-if [ -f $src_stcc ];then
-	mountPfd $src_stcc
-	echo "－开始编辑ColorOS 高温控制器文件：$src_stcc"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ specificScene"
 	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "已删除 specificScene 与 /specificScene 区间行"
 	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "已写回腾讯QQ specificScene"
@@ -412,22 +404,18 @@ sed -i 's/cpu=\"[\-0-9]*/cpu=\"-1/g' $pfd && echo "CPU -1"
 sed -i 's/gpu=\"[\-0-9]*/gpu=\"-1/g' $pfd && echo "GPU -1"
 sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' $pfd && echo "相机亮度 255"
 	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
-	echo "修改ColorOS 高温控制器文件完成"
+	echo "修改$2文件完成"
 else
-	echo " ✘ 不存在ColorOS 高温控制器文件：$src_stcc" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_stcc ];then
-echo "未定义 ColorOS 高温控制器 文件"
-else
-FUN_stcc
-fi
+chkFUN $src_stcc "高温控制器" FUN_stcc
 
 echo2n
 FUN_stcc_gt(){
-if [ -f $src_stcc_gt ];then
-	mountPfd $src_stcc_gt
-	echo "－开始编辑 realme GT模式高温控制器文件：$src_stcc_gt"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑 $2文件：$1"
 	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ specificScene"
 	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "已删除 specificScene 与 /specificScene 区间行"
 	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "已写回腾讯QQ specificScene"
@@ -440,23 +428,19 @@ sed -i 's/cpu=\".*\" g/cpu=\"-1\" g/g' $pfd && echo "CPU -1"
 sed -i 's/gpu=\".*\" r/gpu=\"-1\" r/g' $pfd && echo "GPU -1"
 sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' $pfd && echo "相机亮度 255"
 	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
-	echo "修改 realme GT模式高温控制器文件完成"
+	echo "修改 $2文件完成"
 else
-	echo " ✘ 不存在 realme GT模式高温控制器文件：$src_stcc_gt" >&2
+	echo " ✘ 不存在 $2文件：$1" >&2
 fi
 }
-if [ -z $src_stcc_gt ];then
-echo "未定义 realme GT模式高温控制器 文件"
-else
-FUN_stcc_gt
-fi
+chkFUN $src_stcc_gt "realme GT模式高温控制器" FUN_stcc_gt
 
 echo2n
 FUN_shtp(){
-if [ -f $src_shtp ];then
-	mountPfd $src_shtp
-	echo "－开始编辑ColorOS 高温保护文件：$src_shtp"
-	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "已禁用ColorOS 高温保护"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
+	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "已禁用$2"
 	sed -i '/HighTemperatureShutdownSwitch>/s/true/false/g' $pfd && echo "已禁用高温关机"
 	sed -i '/HighTemperatureFirstStepSwitch>/s/true/false/g' $pfd && echo "已禁用高温第一步骤"
 	sed -i '/HighTemperatureDisableFlashSwitch>/s/true/false/g' $pfd && echo "已关闭高温禁用手电"
@@ -471,23 +455,19 @@ if [ -f $src_shtp ];then
 	sed -i '/ToleranceStart>/s/>[0-9]*</>540</g' $pfd && echo "已修改ToleranceStart为540"
 	sed -i '/ToleranceStop>/s/>[0-9]*</>520</g' $pfd && echo "已修改ToleranceStop为520"
 	blMv
-	echo "修改ColorOS 高温保护文件完成"
+	echo "修改$2文件完成"
 	echo -e "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
 else
-	echo " ✘ 不存在ColorOS 高温保护文件：$src_shtp" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_shtp ];then
-echo "未定义 ColorOS 高温保护 文件"
-else
-FUN_shtp
-fi
+chkFUN $src_shtp "高温保护" FUN_shtp
 
 echo2n
 FUN_stc(){
-if [ -f $src_stc ];then
-	mountPfd $src_stc
-	echo "－开始编辑ColorOS 温控文件：$src_stc"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i '/is_upload_dcs>/s/1/0/g' $pfd && echo "已关闭上传dcs"
 	sed -i '/is_upload_log>/s/1/0/g' $pfd && echo "已关闭上传log"
 	sed -i '/is_upload_errlog>/s/1/0/g' $pfd && echo "已关闭上传错误log"
@@ -502,17 +482,13 @@ if [ -f $src_stc ];then
 	sed -i '/preheat_threshold>/s/>[0-9]*</>540</g' $pfd && echo "已修改preheat_threshold为540"
 	sed -i '/preheat_dex_oat_threshold>/s/>[0-9]*</>520</g' $pfd && echo "已修改preheat_dex_oat_threshold为520"
 	blMv
-	echo "修改ColorOS 温控文件完成"
+	echo "修改$2文件完成"
 	echo -e "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
 else
-	echo " ✘ 不存在ColorOS 温控文件：$src_stc" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_stc ];then
-echo "未定义 ColorOS 温控 文件"
-else
-FUN_stc
-fi
+chkFUN $src_stc "ColorOS 温控" FUN_stc
 
 echo2n
 if [ -d $src_horae ];then
@@ -569,26 +545,22 @@ fi
 
 echo2n
 FUN_apn() {
-if [ -f $src_apn ];then
-	mountPfd $src_apn
-	echo "－开始编辑ColorOS 自带APN接入点配置文件：$src_apn"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i '/read_only/s/true/false/g' $pfd && echo "已关闭自带接入点修改限制"
 	blMv
-	echo "修改ColorOS 自带APN接入点配置文件完成"
+	echo "修改$2文件完成"
 else
-	echo " ✘ 不存在ColorOS 自带APN接入点配置文件：$src_apn " >&2
+	echo " ✘ 不存在$2文件：$1 " >&2
 fi
 }
-if [ -z $src_apn ];then
-echo "未定义 ColorOS 自带APN接入点配置 文件"
-else
-FUN_apn
-fi
+chkFUN $src_apn "自带APN接入点配置" FUN_apn
 
 echo2n
 if [ ! -z "$list_hybridswap" ];then
 	echo "－尝试在安装有面具的情况下开启内存拓展"
-	# ColorOS 和 realmeUI 内存拓展管理脚本为 '/product/bin/init.oplus.nandswap.sh'
+	# 欧加内存拓展管理脚本为 '/product/bin/init.oplus.nandswap.sh'
 	resetprop persist.sys.oplus.nandswap.condition true
 	echo 1 >/sys/block/zram0/hybridswap_dev_life
 else
@@ -598,9 +570,9 @@ fi
 
 echo2n
 FUN_smac(){
-if [ -f $src_smac ];then
-	mountPfd $src_smac
-	echo "－开始编辑ColorOS 应用分身/App Cloner 配置文件：$src_smac"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i 's/maxNum name="[0-9]*/maxNum name="999/' $pfd && echo "已修改应用分身数量限制改为 999"
 	echo "－开始添加应用到allowed列表"
 	for APKN in $APKNs
@@ -613,14 +585,10 @@ if [ -f $src_smac ];then
 		fi
 	done
 	blMv
-	echo "修改ColorOS 应用分身/App Cloner 配置文件完成"
+	echo "修改$2文件完成"
 fi
 }
-if [ -z $src_smac ];then
-echo "未定义 应用分身/App Cloner 文件"
-else
-FUN_smac
-fi
+chkFUN $src_smac "应用分身/App cloner" FUN_smac
 
 
 echo "
@@ -631,9 +599,9 @@ echo "
 
 echo2n
 FUN_blacklistMv(){
-if [ -f $src_blacklistMv ];then
-	mountPfd $src_blacklistMv
-	echo "－开始编辑ColorOS 启动管理文件：$src_blacklistMv"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	for APKN in $blacklistAPKNs
 	do
 		if [[ -z $(grep "$APKN" $pfd) ]];then
@@ -644,20 +612,16 @@ if [ -f $src_blacklistMv ];then
 		fi
 	done
 	blMv
-	echo "修改ColorOS 启动管理文件完成"
+	echo "修改$2文件完成"
 fi
 }
-if [ -z $src_blacklistMv ];then
-echo "未定义 启动管理 文件"
-else
-FUN_blacklistMv
-fi
+chkFUN $src_blacklistMv "启动管理" FUN_blacklistMv
 
 echo2n
 FUN_blacklistMv3c(){
-if [ -f $src_blacklistMv3c ];then
-	mountPfd $src_blacklistMv3c
-	echo "－开始编辑ColorOS 系统启动V3配置表：$src_blacklistMv3c"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2：$1"
 	for APKN in $blacklistAPKNs
 	do
 		if [[ -z $(grep "$APKN" $pfd) ]];then
@@ -668,14 +632,10 @@ if [ -f $src_blacklistMv3c ];then
 		fi
 	done
 	blMv
-	echo "修改ColorOS 系统启动V3配置表完成"
+	echo "修改$2完成"
 fi
 }
-if [ -z $src_blacklistMv3c ];then
-echo "未定义 系统启动V3配置表 文件"
-else
-FUN_blacklistMv3c
-fi
+chkFUN $src_blacklistMv3c "系统启动V3配置表" FUN_blacklistMv3c
 
 echo2n
 if [ -z $src_bootwhitelist ];then
@@ -688,7 +648,7 @@ echo2n
 if [ -z $src_acwl ];then
 echo "未定义 关联启动白名单 文件"
 else
-apknAdd $src_acwl "ColorOS 关联启动白名单"
+apknAdd $src_acwl "关联启动白名单"
 fi
 
 echo2n
@@ -707,44 +667,36 @@ fi
 
 echo2n
 FUN_bgApp(){
-if [ -f $src_bgApp ];then
-	mountPfd $src_bgApp
-	echo "－开始编辑ColorOS Oplus桌面的锁定后台数量限制文件：$src_bgApp"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i '/lock_app_limit/s/value="[0-9]*/value="999/' $pfd && echo "已修改锁定后台数量限制为 999"
-	echo "修改ColorOS Oplus桌面的锁定后台数量限制文件完成"
+	echo "修改$2文件完成"
 else
-	echo " ✘ 不存在ColorOS Oplus桌面的锁定后台数量限制文件：$src_bgApp" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_bgApp ];then
-echo "未定义 锁定后台数量 文件"
-else
-FUN_bgApp
-fi
+chkFUN $src_bgApp "Oplus桌面的锁定后台数量" FUN_bgApp
 
 echo2n
 FUN_spea(){
-if [ -f $src_spea ];then
-	mountPfd $src_spea
-	echo "－开始编辑ColorOS 支付安全保护名单文件：$src_spea"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	sed -i 's/protectapp.*protectapp>/protectapp \/>/g' $pfd && echo "已清空配置文件<protectapp />标签"
-	echo "修改ColorOS 支付安全保护名单完成"
+	echo "修改$2完成"
 	echo "请自行注意网络、ROOT权限应用等环境的安全性！谨防上当受骗！"
 else
-	echo " ✘ 不存在ColorOS 支付安全保护名单文件：$src_spea" >&2
+	echo " ✘ 不存在$2文件：$1" >&2
 fi
 }
-if [ -z $src_spea ];then
-echo "未定义 支付安全保护名单 文件"
-else
-FUN_spea
-fi
+chkFUN $src_spea "支付安全保护名单" FUN_spea
 
 echo2n
 FUN_sdmtam(){
-if [ -f $src_sdmtam ];then
-	mountPfd $src_sdmtam
-	echo "－开始编辑ColorOS 暗色模式第三方应用管理名单文件：$src_sdmtam"
+if [ -f $1 ];then
+	mountPfd $1
+	echo "－开始编辑$2文件：$1"
 	for APKN in $APKNs
 	do
 		darkAPKN="<p\ attr\=\"$APKN\"\/>"
@@ -754,15 +706,11 @@ if [ -f $src_sdmtam ];then
 			echo "包名：$APKN 已在暗色模式第三方应用管理名单" >&2
 		fi
 	done
-	echo "修改ColorOS 暗色模式第三方应用管理名单完成"
+	echo "修改$2完成"
 	echo "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常。"
 fi
 }
-if [ -z $src_sdmtam ];then
-echo "未定义 暗色模式第三方应用管理名单 文件"
-else
-FUN_sdmtam
-fi
+chkFUN $src_sdmtam "暗色模式第三方应用管理名单" FUN_sdmtam
 
 
 # 注释掉多余挂载命令行

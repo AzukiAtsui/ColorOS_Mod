@@ -20,8 +20,8 @@ workdir=$(cd $(dirname $0);pwd)
 rootpath=$(cd ~;pwd)
 
 # 模块包属性
-ver=v1.1.1
-versioncode=2209211
+ver=v1.1.2
+versioncode=2209221
 zip_nm=ColorOS_Mod-$ver-$versioncode.zip
 
 upd=false
@@ -32,19 +32,28 @@ io_release=AzukiAtsui.github.io/ColorOS_Mod/release
 
 mChg(){
 # Template of "changelog": "https://azukiatsui.github.io/ColorOS_Mod/release/changelog.md"
-echo "### Changelog
-1. Trying activating ColorOS swap (hybridswap)
-2. Modify dtbo configs
-3. Turn off the thermal node modification by default
-4. bugfix
+echo "## $ver
+### Changelog
+1. Update README, build.sh, dts.sh
+2. Reduce bytes
 
 ### 更新日志
-1. 尝试激活内存拓展（hybridswap）
-2. 修改 dtbo 配置
+1. 更新 中英文README、build.sh、dts.sh
+2. 减少字节
+
+## v1.1.1
+### Changelog
+1. Modify dtbo configs
+2. Trying activating ColorOS swap (hybridswap)
+3. Turn off the thermal node modification by default
+4. BUGFIX
+
+### 更新日志
+1. 修改 dtbo 配置
+2. 尝试激活内存拓展（hybridswap）
 3. 默认关闭温控节点修改
 4. 修复已知问题
 " >$new_chg
-
 }
 
 mZip(){
@@ -67,16 +76,20 @@ echo "{
 	\"zipUrl\": \"https://github.com/AzukiAtsui/ColorOS_Mod/releases/download/$versioncode/$zip_nm\",
 	\"changelog\": \"https://azukiatsui.github.io/ColorOS_Mod/release/changelog.md\"
 }" >$new_json
-
 }
 
 pJson(){
 [[ $upd == false ]] && return 4
-		cd $rootpath/AzukiAtsui.github.io
-		git checkout main || return 8
-		git add .
-		git commit -m "ColorOS_Mod $ver"
-		git push -u origin main
+	if [ ! -d $rootpath/AzukiAtsui.github.io ];then
+		cd $rootpath
+		git clone -b master git@github.com:AzukiAtsui/AzukiAtsui.github.io.git
+	fi
+	mv -f $new_json $rootpath/$io_release/main.json
+	mv -f $new_chg $rootpath/$io_release/changelog.md
+	cd $rootpath/AzukiAtsui.github.io
+	git add .
+	git commit -m "ColorOS_Mod $ver"
+	git push -u origin master
 }
 
 pvTag(){
@@ -89,30 +102,15 @@ pvTag(){
 	git push origin :refs/tags/$versioncode
 	git tag -a "$versioncode" $last_commit -m "$ver"
 	git push origin $versioncode
-	return
 }
 
 main(){
 	mJson
 	mChg
 	mZip
-	if [ -f $rootpath/$io_release/main.json ];then
-		mv -f $new_json $rootpath/$io_release/main.json
-		mv -f $new_chg $rootpath/$io_release/changelog.md
-		pJson
-	else
-		cd $rootpath
-		git clone -b main git@github.com:AzukiAtsui/AzukiAtsui.github.io.git
-		# git checkout -b main origin/main
-		mv -f $new_json $rootpath/$io_release/main.json
-		mv -f $new_chg $rootpath/$io_release/changelog.md
-		pJson
-		if [ $? -eq 4 ];then
-			echo "变量upd=false，故不上传"
-		elif [ $? -eq 8 ];then
-			echo "需要上传至分支main后，请求合并到主分支master"
-		fi
-		return
+	pJson
+	if [ $? -eq 4 ];then
+		echo "变量upd=false，故不上传"
 	fi
 	pvTag
 }
