@@ -21,13 +21,12 @@ More info: [ColorOS_Mod index](https://azukiatsui.github.io/ColorOS_Mod/index.md
 
 # Changelog
 
-## **MagiskModule_v1.1.0** by   AzukiAtsui   2022-09-18
+## **MagiskModule_v1.1.1** by   AzukiAtsui   2022-09-21
 
 1. Trying activating ColorOS swap (hybridswap)
 2. Modify dtbo configs
 3. Turn off the thermal node modification by default
-4. Raise the probability of using 5G signal after falling 4G
-5. bugfix
+4. bugfix
 
 ## **ScriptFile_v1.2** by   AzukiAtsui   2022-08-27
 

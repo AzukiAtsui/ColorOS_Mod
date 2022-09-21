@@ -21,13 +21,12 @@
 
 # 更新日志
 
-## **MagiskModule_v1.1.0** by   AzukiAtsui   2022-09-18
+## **MagiskModule_v1.1.1** by   AzukiAtsui   2022-09-21
 
 1. 尝试激活内存拓展（hybridswap）
 2. 修改 dtbo 配置
 3. 默认关闭温控节点修改
-4. 提高掉落4G后回升5G概率
-5. 修复已知问题
+4. 修复已知问题
 
 ## **ScriptFile_v1.2** by   AzukiAtsui   2022-08-27
 

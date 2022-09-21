@@ -27,8 +27,3 @@ resetprop ro.boot.flash.locked 1
 # resetprop ro.boot.vbmeta.device_state locked
 resetprop ro.boot.verifiedbootstate green
 
-#提高掉落4G后回升5G概率 by 酷安@望月古川
-mkdir /dev/crond
-echo "*/2 * * * * am start-foreground-service -n com.oplus.crashbox/.ExceptionMonitorService" > /dev/crond/root
-crond -c /dev/crond
-

@@ -20,10 +20,9 @@ workdir=$(cd $(dirname $0);pwd)
 rootpath=$(cd ~;pwd)
 
 # 模块包属性
-ver=v1.1.0
-versioncode=2209181
-zip_nm=ColorOS_Mod-$ver-$versioncode-MagiskModule.zip
-version=$ver\($versioncode\)
+ver=v1.1.1
+versioncode=2209211
+zip_nm=ColorOS_Mod-$ver-$versioncode.zip
 
 upd=false
 new_json=$workdir/main.json
@@ -33,21 +32,17 @@ io_release=AzukiAtsui.github.io/ColorOS_Mod/release
 
 mChg(){
 # Template of "changelog": "https://azukiatsui.github.io/ColorOS_Mod/release/changelog.md"
-echo "## $version
-
-### Changelog
+echo "### Changelog
 1. Trying activating ColorOS swap (hybridswap)
 2. Modify dtbo configs
 3. Turn off the thermal node modification by default
-4. Raise the probability of using 5G signal after falling 4G
-5. bugfix
+4. bugfix
 
 ### 更新日志
 1. 尝试激活内存拓展（hybridswap）
 2. 修改 dtbo 配置
 3. 默认关闭温控节点修改
-4. 提高掉落4G后回升5G概率
-5. 修复已知问题
+4. 修复已知问题
 " >$new_chg
 
 }
@@ -56,10 +51,10 @@ mZip(){
 if [ -d $workdir/magisk ];then
 	pushd $workdir/magisk >/dev/null
 	chmod 777 $(find .)
-		sed -i 's/version=.*/version='$version'/g' module.prop
+		sed -i 's/version=.*/version='$ver'/g' module.prop
 		sed -i 's/versioncode=.*/versioncode='$versioncode'/g' module.prop
 		zip -9 -r $zip_nm * 2>/dev/null >/dev/null
-		mv -f $zip_nm $workdir
+		mv -f $zip_nm $workdir/..
 	popd >/dev/null
 fi
 }
@@ -67,7 +62,7 @@ fi
 mJson(){
 # Template of updateJson=https://azukiatsui.github.io/ColorOS_Mod/release/main.json
 echo "{
-	\"version\": \"$version\",
+	\"version\": \"$ver\",
 	\"versionCode\": $versioncode,
 	\"zipUrl\": \"https://github.com/AzukiAtsui/ColorOS_Mod/releases/download/$versioncode/$zip_nm\",
 	\"changelog\": \"https://azukiatsui.github.io/ColorOS_Mod/release/changelog.md\"
@@ -78,19 +73,22 @@ echo "{
 pJson(){
 [[ $upd == false ]] && return 4
 		cd $rootpath/AzukiAtsui.github.io
-		git checkout main
+		git checkout main || return 8
 		git add .
-		git commit -m "ColorOS_Mod $version"
+		git commit -m "ColorOS_Mod $ver"
 		git push -u origin main
 }
 
 pvTag(){
-	# cd $workdir
-	# git add .
-	# git commit -m "$version"
-	# last_commit=$(git log | awk 2)
-	# git tag -a "$versioncode" $last_commit -m "$version"
-	# git push origin $versioncode
+	cd $workdir
+	git add .
+	git commit -m "$ver"
+	git push -u origin main
+	last_commit=$(git log --pretty=format:"%h" | head -1  | awk '{print $1}')
+	git tag -d "$versioncode"
+	git push origin :refs/tags/$versioncode
+	git tag -a "$versioncode" $last_commit -m "$ver"
+	git push origin $versioncode
 	return
 }
 
@@ -109,7 +107,11 @@ main(){
 		mv -f $new_json $rootpath/$io_release/main.json
 		mv -f $new_chg $rootpath/$io_release/changelog.md
 		pJson
-		[ $? -eq 4 ] && echo "变量upd=false，故不上传"
+		if [ $? -eq 4 ];then
+			echo "变量upd=false，故不上传"
+		elif [ $? -eq 8 ];then
+			echo "需要上传至分支main后，请求合并到主分支master"
+		fi
 		return
 	fi
 	pvTag

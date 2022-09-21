@@ -17,6 +17,8 @@
 #
 
 SKIPUNZIP=1
+nvid=`getprop ro.build.oplus_nv_id`
+[ -z $nvid ] && abort "当前系统不是ColorOS 或者 realmeUI，不必使用ColorOS_Mod"
 # 各安卓平台版本所支持的API 级别见 [Android 开发者指南](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels) 
 if [ $API -le 30 ];then
 	abort "不支持Android 11 及以下。仅对Android 12 ~ 13 的ColorOS 和 realmeUI 生效"
@@ -38,9 +40,9 @@ unzip -o "$ZIPFILE" -x 'META-INF/*' customize.sh -d $MODPATH >&2
 # 在更下方的“开始编辑配置文件”的 sed 命令行前加井号。
 #
 
-# dtbo镜像
+# dtbo镜像配置修改 支持机型见 ./dts_configs 目录
 switch_dtbo=TRUE
-# 2022-09-12 支持真我GT2 Pro、真我GT Neo2、一加9 Pro 更改dtbo充电温控墙; realme及OPPO使用的VOOC需要内核去除智慧闪充才能生效; 感谢 酷安@init萌新很新
+# realmeUI 需要内核解除 smart_charge 才能生效dtbo充电温控墙; 感谢 酷安@init萌新很新
 
 # ColorOS 13 息屏指纹盲解
 src_fccas=/my_product/etc/extension/feature_common_com.android.systemui.xml
@@ -185,7 +187,6 @@ com.oppo.book
 
 
 function chkNvid(){
-nvid=$(getprop ro.build.oplus_nv_id)
 if [ $nvid -eq 10010111 ];then
 echo 国行版
 elif [ $nvid -eq 00011010 ];then
@@ -201,10 +202,10 @@ fi
 
 ui_print "
 
-ColorOS_Mod-MagiskModule version : $(grep_prop version $TMPDIR/module.prop)
+ColorOS_Mod-MagiskModule version : `grep_prop version $TMPDIR/module.prop`
 
 - * Info of the device（设备信息）*
-- 商品名 : $(getprop ro.vendor.oplus.market.name)
+- 商品名 : `getprop ro.vendor.oplus.market.name`
 - 品牌 : `getprop ro.product.brand`
 - 型号 : `getprop ro.product.model`
 - 代号 : `getprop ro.product.device`
@@ -222,7 +223,6 @@ ColorOS_Mod-MagiskModule version : $(grep_prop version $TMPDIR/module.prop)
 
 
 chmod +x $(find $MODPATH/bin)
-damCM=/data/adb/modules/coloros_mod
 if [ -f $MODPATH/bin/bash ];then
 	alias BASH=$MODPATH/bin/bash
 	echo "将使用模块内置的 GNU Bash"
@@ -236,11 +236,11 @@ else
 	abort "有时竟一个 bash 都没有！"
 fi
 
+damCM=/data/adb/modules/coloros_mod
 if [ -f $damCM/post-fs-data.sh ];then
 cat $damCM/post-fs-data.sh | grep 'mount --bind' | sed -n 's/^[# ]*mount --bind .* \//umount \//g;p' >$TMPDIR/umount.sh
 . $TMPDIR/umount.sh 2>/dev/null
 fi
-pfds=$MODPATH/post-fs-data.sh
 
 
 sn=1
@@ -250,6 +250,7 @@ echo2n() {
 	sn=$(($sn+1))
 }
 
+pfds=$MODPATH/post-fs-data.sh
 mountPfd() {
 	pfdDir=$(dirname $1 | sed -e 's/^\/vendor\//\/system\/vendor\//' -e 's/^\/product\//\/system\/product\//' -e 's/^\/system_ext\//\/system\/system_ext\//')
 	[ -d $MODPATH$pfdDir ] || mkdir -p $MODPATH$pfdDir
@@ -282,7 +283,7 @@ fi
 
 blMv() {
 	sed -i 's/<\!--.*-->//g' $pfd ;# 删除注释
-	sed -i '/^[ \t]*$/d' $pfd ;# 删除空行
+	sed -i '/^[[:space:]]*$/d' $pfd ;# 删除空行
 }
 
 
@@ -295,7 +296,10 @@ echo "
 echo2n
 if [[ $switch_dtbo == TRUE ]];then
 	echo "－开始修改 dtbo镜像"
-	[ $(cat $damCM/dtbo_sign ) -eq 1 ] && echo " ✔ 已安装过 dtbo" && echo 1 >$MODPATH/dtbo_sign
+	if [ `cat $damCM/dtbo_sign` -eq 1 ];then
+	echo " ✔ 已安装过 dtbo"
+	echo 1 >$MODPATH/dtbo_sign
+	fi
 	BASH $MODPATH/dts.sh >&2
 	if [ $? -eq 0 ];then
 		echo -e "大概是修改并刷入成功了\n欲知详情请保存安装日志（通常在右上角）\n请勿删除或移动 $damCM 目录的原版dtbo\n在将来，卸载 ColorOS_Mod 时会刷回原版 dtbo"
@@ -308,7 +312,7 @@ if [[ $switch_dtbo == TRUE ]];then
 	elif [ $? -eq 12 ];then
 		echo "mkdtimg二进制文件丢失，模块损坏？"
 	elif [ $? -eq 5 ];then
-		echo "虽然没有改 dtbo，但可以继续下面的修改"
+		echo "虽然没有成功修改 dtbo，但可以继续下面的修改"
 	fi
 else
 	echo "开关已关闭，跳过修改 dtbo镜像"
@@ -316,7 +320,7 @@ else
 fi
 
 echo2n
-function FNCNfccas() {
+FUN_fccas() {
 if [ -f $src_fccas ];then
 	mountPfd $src_fccas
 	echo "－开始编辑ColorOS 13 系统设置特性配置文件：$src_fccas"
@@ -331,18 +335,18 @@ fi
 if [ -z $src_fccas ];then
 echo "未定义 ColorOS 13 系统设置特性配置 文件"
 else
-FNCNfccas
+FUN_fccas
 fi
 
 echo2n
-function FNCNrcc(){
+FUN_rcc(){
 if [ -f $src_rrc ];then
 	mountPfd $src_rrc
 	echo "－开始编辑ColorOS 屏幕刷新率应用配置文件：$src_rrc"
 	sed -i 's/rateId=\"[0-9]-[0-9]-[0-9]-[0-9]/rateId=\"3-1-2-3/g' $pfd && echo "已全局改刷新率模式为 3-1-2-3"
-	sed -i 's/enableRateOverride=\"true/enableRateOverride=\"false/g' $pfd && echo "surfaceview，texture场景不降"
-	sed -i 's/disableViewOverride=\"true/disableViewOverride=\"false/g' $pfd && echo "已关闭disableViewOverride"
-	sed -i 's/inputMethodLowRate=\"true/inputMethodLowRate=\"false/g' $pfd && echo "已关闭输入法降帧"
+	sed -i 's/enableRateOverride="true/enableRateOverride="false/g' $pfd && echo "surfaceview，texture场景不降"
+	sed -i 's/disableViewOverride="true/disableViewOverride="false/g' $pfd && echo "已关闭disableViewOverride"
+	sed -i 's/inputMethodLowRate="true/inputMethodLowRate="false/g' $pfd && echo "已关闭输入法降帧"
 	blMv
 	echo -e "修改ColorOS 屏幕刷新率重点应用名单完成\n注意：系统设置刷新率仍然生效"
 else
@@ -352,11 +356,11 @@ fi
 if [ -z $src_rrc ];then
 echo "未定义 屏幕刷新率应用配置 文件"
 else
-FNCNrcc
+FUN_rcc
 fi
 
 echo2n
-function FNCNovc(){
+FUN_ovc(){
 if [ -f $src_ovc ];then
 	mountPfd $src_ovc
 	echo "－开始编辑ColorOS 动态刷新率(adfr)文件：$src_ovc"
@@ -370,11 +374,11 @@ fi
 if [ -z $src_ovc ];then
 echo "未定义 ColorOS 动态刷新率(adfr) 文件"
 else
-FNCNovc
+FUN_ovc
 fi
 
 echo2n
-function FNCNmdpl(){
+FUN_mdpl(){
 if [ -f $src_mdpl ];then
 	mountPfd $src_mdpl
 	echo "－开始编辑ColorOS 视频播放器帧率控制文件：$src_mdpl"
@@ -388,11 +392,11 @@ fi
 if [ -z $src_mdpl ];then
 echo "未定义 ColorOS 视频播放器帧率控制 文件"
 else
-FNCNmdpl
+FUN_mdpl
 fi
 
 echo2n
-function FNCNstcc(){
+FUN_stcc(){
 if [ -f $src_stcc ];then
 	mountPfd $src_stcc
 	echo "－开始编辑ColorOS 高温控制器文件：$src_stcc"
@@ -404,8 +408,8 @@ if [ -f $src_stcc ];then
 	sed -i '/\/specificScene/ r specific' $pfd && rm -rf $TMPDIR/specific && echo "已写回Oplus相机 specific"
 	sed -i '/^[ \t]*$/d' $pfd && rm -rf specific && echo "已删除空行"
 sed -i 's/fps=\"[0-9]*/fps=\"0/g' $pfd && echo "已关闭温控锁帧率"
-sed -i 's/cpu=\".*\" g/cpu=\"-1\" g/g' $pfd && echo "CPU -1"
-sed -i 's/gpu=\".*\" r/gpu=\"-1\" r/g' $pfd && echo "GPU -1"
+sed -i 's/cpu=\"[\-0-9]*/cpu=\"-1/g' $pfd && echo "CPU -1"
+sed -i 's/gpu=\"[\-0-9]*/gpu=\"-1/g' $pfd && echo "GPU -1"
 sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' $pfd && echo "相机亮度 255"
 	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
 	echo "修改ColorOS 高温控制器文件完成"
@@ -416,11 +420,11 @@ fi
 if [ -z $src_stcc ];then
 echo "未定义 ColorOS 高温控制器 文件"
 else
-FNCNstcc
+FUN_stcc
 fi
 
 echo2n
-function FNCNstcc_gt(){
+FUN_stcc_gt(){
 if [ -f $src_stcc_gt ];then
 	mountPfd $src_stcc_gt
 	echo "－开始编辑 realme GT模式高温控制器文件：$src_stcc_gt"
@@ -444,28 +448,28 @@ fi
 if [ -z $src_stcc_gt ];then
 echo "未定义 realme GT模式高温控制器 文件"
 else
-FNCNstcc_gt
+FUN_stcc_gt
 fi
 
 echo2n
-function FNCNshtp(){
+FUN_shtp(){
 if [ -f $src_shtp ];then
 	mountPfd $src_shtp
 	echo "－开始编辑ColorOS 高温保护文件：$src_shtp"
-	sed -i 's/HighTemperatureProtectSwitch>true/HighTemperatureProtectSwitch>false/g' $pfd && echo "已禁用ColorOS 高温保护"
-	sed -i 's/HighTemperatureShutdownSwitch>true/HighTemperatureShutdownSwitch>false/g' $pfd && echo "已禁用高温关机"
-	sed -i 's/HighTemperatureFirstStepSwitch>true/HighTemperatureFirstStepSwitch>false/g' $pfd && echo "已禁用高温第一步骤"
-	sed -i 's/HighTemperatureDisableFlashSwitch>true/HighTemperatureDisableFlashSwitch>false/g' $pfd && echo "已关闭高温禁用手电"
-	sed -i 's/HighTemperatureDisableFlashChargeSwitch>true/HighTemperatureDisableFlashChargeSwitch>false/g' $pfd && echo "已关闭高温禁用闪充，充就完了"
-	sed -i 's/HighTemperatureControlVideoRecordSwitch>true/HighTemperatureControlVideoRecordSwitch>false/g' $pfd && echo "已关闭高温视频录制控制"
+	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "已禁用ColorOS 高温保护"
+	sed -i '/HighTemperatureShutdownSwitch>/s/true/false/g' $pfd && echo "已禁用高温关机"
+	sed -i '/HighTemperatureFirstStepSwitch>/s/true/false/g' $pfd && echo "已禁用高温第一步骤"
+	sed -i '/HighTemperatureDisableFlashSwitch>/s/true/false/g' $pfd && echo "已关闭高温禁用手电"
+	sed -i '/HighTemperatureDisableFlashChargeSwitch>/s/true/false/g' $pfd && echo "已关闭高温禁用闪充，充就完了"
+	sed -i '/HighTemperatureControlVideoRecordSwitch>/s/true/false/g' $pfd && echo "已关闭高温视频录制控制"
 	sed -i -e '/HighTemperatureShutdownUpdateTime/d' -e '/HighTemperatureProtectFirstStepIn/d' -e '/HighTemperatureProtectFirstStepOut/d' -e '/HighTemperatureProtectThresholdIn/d' -e '/HighTemperatureProtectThresholdOut/d' -e '/HighTemperatureProtectShutDown/d' -e '/HighTemperatureDisableFlashLimit/d' -e '/HighTemperatureEnableFlashLimit/d' -e '/HighTemperatureDisableFlashChargeLimit/d' -e '/HighTemperatureEnableFlashChargeLimit/d' -e '/HighTemperatureDisableVideoRecordLimit/d' -e '/HighTemperatureEnableVideoRecordLimit/d' $pfd && echo "已删除部分 Time In/Out Dis/Enable 项"
-	sed -i 's/camera_temperature_limit>[0-9]*</camera_temperature_limit>600</g' $pfd && echo "已修改camera_temperature_limit为600"
-	sed -i 's/ToleranceFirstStepIn>[0-9]*</ToleranceFirstStepIn>600</g' $pfd && echo "已修改ToleranceFirstStepIn为600"
-	sed -i 's/ToleranceFirstStepOut>[0-9]*</ToleranceFirstStepOut>580</g' $pfd && echo "已修改ToleranceFirstStepOut为580"
-	sed -i 's/ToleranceSecondStepIn>[0-9]*</ToleranceSecondStepIn>620</g' $pfd && echo "已修改ToleranceSecondStepIn为620"
-	sed -i 's/ToleranceSecondStepOut>[0-9]*</ToleranceSecondStepOut>600</g' $pfd && echo "已修改ToleranceSecondStepOut为600"
-	sed -i 's/ToleranceStart>[0-9]*</ToleranceStart>540</g' $pfd && echo "已修改ToleranceStart为540"
-	sed -i 's/ToleranceStop>[0-9]*</ToleranceStop>520</g' $pfd && echo "已修改ToleranceStop为520"
+	sed -i '/camera_temperature_limit>/s/>[0-9]*</>600</g' $pfd && echo "已修改camera_temperature_limit为600"
+	sed -i '/ToleranceFirstStepIn>/s/>[0-9]*</>600</g' $pfd && echo "已修改ToleranceFirstStepIn为600"
+	sed -i '/ToleranceFirstStepOut>/s/>[0-9]*</>580</g' $pfd && echo "已修改ToleranceFirstStepOut为580"
+	sed -i '/ToleranceSecondStepIn>/s/>[0-9]*</>620</g' $pfd && echo "已修改ToleranceSecondStepIn为620"
+	sed -i '/ToleranceSecondStepOut>/s/>[0-9]*</>600</g' $pfd && echo "已修改ToleranceSecondStepOut为600"
+	sed -i '/ToleranceStart>/s/>[0-9]*</>540</g' $pfd && echo "已修改ToleranceStart为540"
+	sed -i '/ToleranceStop>/s/>[0-9]*</>520</g' $pfd && echo "已修改ToleranceStop为520"
 	blMv
 	echo "修改ColorOS 高温保护文件完成"
 	echo -e "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
@@ -476,27 +480,27 @@ fi
 if [ -z $src_shtp ];then
 echo "未定义 ColorOS 高温保护 文件"
 else
-FNCNshtp
+FUN_shtp
 fi
 
 echo2n
-function FNCNstc(){
+FUN_stc(){
 if [ -f $src_stc ];then
 	mountPfd $src_stc
 	echo "－开始编辑ColorOS 温控文件：$src_stc"
-	sed -i 's/is_upload_dcs>1/is_upload_dcs>0/g' $pfd && echo "已关闭上传dcs"
-	sed -i 's/is_upload_log>11/is_upload_log>0/g' $pfd && echo "已关闭上传log"
-	sed -i 's/is_upload_errlog>11/is_upload_errlog>0/g' $pfd && echo "已关闭上传错误log"
-	sed -i 's/thermal_battery_temp>1/thermal_battery_temp>0/g' $pfd && echo "已关闭thermal_battery_temp"
+	sed -i '/is_upload_dcs>/s/1/0/g' $pfd && echo "已关闭上传dcs"
+	sed -i '/is_upload_log>/s/1/0/g' $pfd && echo "已关闭上传log"
+	sed -i '/is_upload_errlog>/s/1/0/g' $pfd && echo "已关闭上传错误log"
+	sed -i '/thermal_battery_temp>/s/1/0/g' $pfd && echo "已关闭thermal_battery_temp"
 	sed -i '/thermal_heat_path/d' $pfd && echo "已删除thermal_heat_path"
 	# OPPO Find X3 <detect_environment_time_threshold>600000</detect_environment_time_threshold> <detect_environment_temp_threshold>30</detect_environment_temp_threshold>
 	sed -i '/detect_environment_time_threshold>[0-9]*</d' $pfd && echo "已删除环境检测时间阈值"
 	sed -i '/detect_environment_temp_threshold>[0-9]*</d' $pfd && echo "已删除环境检测温度阈值"
-	sed -i 's/more_heat_threshold>[0-9]*</more_heat_threshold>600</g' $pfd && echo "已修改more_heat_threshold为600"
-	sed -i 's/<heat_threshold>[0-9]*</<heat_threshold>580</g' $pfd && echo "已修改heat_threshold为580"
-	sed -i 's/less_heat_threshold>[0-9]*</less_heat_threshold>560</g' $pfd && echo "已修改less_heat_threshold为560"
-	sed -i 's/preheat_threshold>[0-9]*</preheat_threshold>540</g' $pfd && echo "已修改preheat_threshold为540"
-	sed -i 's/preheat_dex_oat_threshold>[0-9]*</preheat_dex_oat_threshold>520</g' $pfd && echo "已修改preheat_dex_oat_threshold为520"
+	sed -i '/more_heat_threshold>/s/>[0-9]*</>600</g' $pfd && echo "已修改more_heat_threshold为600"
+	sed -i '/<heat_threshold>/s/>[0-9]*</>580</g' $pfd && echo "已修改heat_threshold为580"
+	sed -i '/less_heat_threshold>/s/>[0-9]*</>560</g' $pfd && echo "已修改less_heat_threshold为560"
+	sed -i '/preheat_threshold>/s/>[0-9]*</>540</g' $pfd && echo "已修改preheat_threshold为540"
+	sed -i '/preheat_dex_oat_threshold>/s/>[0-9]*</>520</g' $pfd && echo "已修改preheat_dex_oat_threshold为520"
 	blMv
 	echo "修改ColorOS 温控文件完成"
 	echo -e "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
@@ -507,7 +511,7 @@ fi
 if [ -z $src_stc ];then
 echo "未定义 ColorOS 温控 文件"
 else
-FNCNstc
+FUN_stc
 fi
 
 echo2n
@@ -525,10 +529,10 @@ if [[ $switch_thermal == TRUE ]];then
 echo "－开始编辑修改温控节点温度阈值"
 for thermalTemp in `find /sys/devices/virtual/thermal/ -iname "*temp*" -type f`
 do
-	wint=$(cat $thermalTemp)
+	wint=`cat $thermalTemp`
 	[[ -z $wint ]] && continue
-	echo "$(realpath $thermalTemp) 当前参数：$wint" >&2
-	alias echoTt=echo "改善参数：$(cat $pfd) 到$(realpath $thermalTemp)"
+	echo "`realpath $thermalTemp` 当前参数：$wint" >&2
+	alias echoTt=echo "改善参数：`cat $pfd` 到`realpath $thermalTemp`"
 [[ $wint -lt 40000 || $wint -ge 55000 ]] && echo " ✘ 跳过修改" && continue
 	mountPfd $thermalTemp
 	if [ $wint -lt 45000 ];then
@@ -564,7 +568,7 @@ fi
 # find /system /vendor /product /odm /system_ext -type f -iname "*thermal*" -exec ls -s -h {} \; 2>/dev/null | sed '/hardware/d' ; # swap to 0, may cause STUCK.
 
 echo2n
-function FNCNapn() {
+FUN_apn() {
 if [ -f $src_apn ];then
 	mountPfd $src_apn
 	echo "－开始编辑ColorOS 自带APN接入点配置文件：$src_apn"
@@ -578,7 +582,7 @@ fi
 if [ -z $src_apn ];then
 echo "未定义 ColorOS 自带APN接入点配置 文件"
 else
-FNCNapn
+FUN_apn
 fi
 
 echo2n
@@ -593,7 +597,7 @@ else
 fi
 
 echo2n
-function FNCNsmac(){
+FUN_smac(){
 if [ -f $src_smac ];then
 	mountPfd $src_smac
 	echo "－开始编辑ColorOS 应用分身/App Cloner 配置文件：$src_smac"
@@ -615,7 +619,7 @@ fi
 if [ -z $src_smac ];then
 echo "未定义 应用分身/App Cloner 文件"
 else
-FNCNsmac
+FUN_smac
 fi
 
 
@@ -626,7 +630,7 @@ echo "
 ######### 以下编辑 /data/ 目录内文件 #########"
 
 echo2n
-function FNCNblacklistMv(){
+FUN_blacklistMv(){
 if [ -f $src_blacklistMv ];then
 	mountPfd $src_blacklistMv
 	echo "－开始编辑ColorOS 启动管理文件：$src_blacklistMv"
@@ -646,11 +650,11 @@ fi
 if [ -z $src_blacklistMv ];then
 echo "未定义 启动管理 文件"
 else
-FNCNblacklistMv
+FUN_blacklistMv
 fi
 
 echo2n
-function FNCNblacklistMv3c(){
+FUN_blacklistMv3c(){
 if [ -f $src_blacklistMv3c ];then
 	mountPfd $src_blacklistMv3c
 	echo "－开始编辑ColorOS 系统启动V3配置表：$src_blacklistMv3c"
@@ -670,7 +674,7 @@ fi
 if [ -z $src_blacklistMv3c ];then
 echo "未定义 系统启动V3配置表 文件"
 else
-FNCNblacklistMv3c
+FUN_blacklistMv3c
 fi
 
 echo2n
@@ -702,11 +706,11 @@ apknAdd $src13_awl "ColorOS 13 自启动白名单文件"
 fi
 
 echo2n
-function FNCNbgApp(){
+FUN_bgApp(){
 if [ -f $src_bgApp ];then
 	mountPfd $src_bgApp
 	echo "－开始编辑ColorOS Oplus桌面的锁定后台数量限制文件：$src_bgApp"
-	sed -i '/lock_app_limit/ s/value="[0-9]*/value="999/' $pfd && echo "已修改锁定后台数量限制为 999"
+	sed -i '/lock_app_limit/s/value="[0-9]*/value="999/' $pfd && echo "已修改锁定后台数量限制为 999"
 	echo "修改ColorOS Oplus桌面的锁定后台数量限制文件完成"
 else
 	echo " ✘ 不存在ColorOS Oplus桌面的锁定后台数量限制文件：$src_bgApp" >&2
@@ -715,11 +719,11 @@ fi
 if [ -z $src_bgApp ];then
 echo "未定义 锁定后台数量 文件"
 else
-FNCNbgApp
+FUN_bgApp
 fi
 
 echo2n
-function FNCNspea(){
+FUN_spea(){
 if [ -f $src_spea ];then
 	mountPfd $src_spea
 	echo "－开始编辑ColorOS 支付安全保护名单文件：$src_spea"
@@ -733,11 +737,11 @@ fi
 if [ -z $src_spea ];then
 echo "未定义 支付安全保护名单 文件"
 else
-FNCNspea
+FUN_spea
 fi
 
 echo2n
-function FNCNsdmtam(){
+FUN_sdmtam(){
 if [ -f $src_sdmtam ];then
 	mountPfd $src_sdmtam
 	echo "－开始编辑ColorOS 暗色模式第三方应用管理名单文件：$src_sdmtam"
@@ -757,14 +761,14 @@ fi
 if [ -z $src_sdmtam ];then
 echo "未定义 暗色模式第三方应用管理名单 文件"
 else
-FNCNsdmtam
+FUN_sdmtam
 fi
 
 
 # 注释掉多余挂载命令行
 sed -i 's/^mount --bind \$MODDIR\/system\//# mount --bind \$MODDIR\/system\//g' $pfds
 # 清理临时文件
-rm -rf $MODPATH/dts_configs >/dev/null 2>&1
+rm -rf $MODPATH/dts_configs $MODPATH/dts >/dev/null 2>&1
 
 echo "
 
