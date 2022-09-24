@@ -33,32 +33,36 @@ fi
 }
 
 nandswapControl() {
-if [[ $(cat $hybridswap_sign) == 3 ]];then
-# 开关跳过
-	sleep 0
-elif [[ $(cat $hybridswap_sign) == 1 ]];then
-	sleep 0
-else
-	toolkit
+case $(cat $hybridswap_sign) in
+	1)
+		sleep 0
+		;;
+	3)
+		# 开关跳过
+		sleep 0
+		;;
+	*)
+		toolkit
+		for i in $(seq 0 10); do
+			swapoff /dev/block/zram0 2>/dev/null
+			swapoff /dev/block/zram1 2>/dev/null
+			swapoff /dev/block/zram2 2>/dev/null
+			sleep 1
+		done
 
-	for i in $(seq 0 10); do
-		swapoff /dev/block/zram0 2>/dev/null
-		swapoff /dev/block/zram1 2>/dev/null
-		swapoff /dev/block/zram2 2>/dev/null
-		sleep 1
-	done
+		# losetup -f; sleep 1
+		# loop_device=$(losetup -f -s $swapfile_path 2>&1)
+		# loop_device_ret=`echo $loop_device |awk -Floop '{print $1}'`
+		# losetup -d $loop_device 2>/dev/null
+		# mkswap $swapfile_path >/dev/null
+		# losetup $loop_device $swapfile_path >/dev/null
 
-	# losetup -f; sleep 1
-	# loop_device=$(losetup -f -s $swapfile_path 2>&1)
-	# loop_device_ret=`echo $loop_device |awk -Floop '{print $1}'`
-	# losetup -d $loop_device 2>/dev/null
-	# mkswap $swapfile_path >/dev/null
-	# losetup $loop_device $swapfile_path >/dev/null
+		swapon /dev/block/zram0 -p 0 >/dev/null
 
-	swapon /dev/block/zram0 -p 0 >/dev/null
-
-	echo 1 >$hybridswap_sign
-fi
+		echo 1 >$hybridswap_sign
+		;;
+esac
 }
+
 nandswapControl
 

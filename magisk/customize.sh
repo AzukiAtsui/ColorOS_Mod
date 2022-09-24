@@ -17,6 +17,7 @@
 #
 
 SKIPUNZIP=1
+# 欧加设备 国家/地区代码
 nvid=`getprop ro.build.oplus_nv_id`
 [ -z $nvid ] && abort "当前系统不是ColorOS 或者 realmeUI，不必使用ColorOS_Mod"
 # 各安卓平台版本所支持的API 级别见 [Android 开发者指南](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels) 
@@ -174,8 +175,6 @@ src_spea=/data/data/com.coloros.securepay/files/enabledapp.xml
 #
 
 
-
-
 APKNs=$(pm list packages -e -3 | sed 's/.*://')
 # 黑名单应用包名，从自启名单删除它们
 blacklistAPKNs="
@@ -185,56 +184,104 @@ com.heytap.book
 com.oppo.book
 "
 
-
 function chkNvid(){
-if [ $nvid -eq 10010111 ];then
-echo 国行版
-elif [ $nvid -eq 00011010 ];then
-echo 台湾版
-elif [ $nvid -eq 00010111 ];then
-echo 印度版
-elif [ $nvid -eq 01000100 ];then
-echo 欧洲版
-else
-echo "未知地区，nv_id = $nvid"
-fi
+case $nvid in
+	10010111)
+		echo CN 中国 China
+		;;
+	00011010)
+		echo TW 中国台湾省 Taiwan
+		;;
+	00110111)
+		echo RU 俄罗斯 Russia
+		;;
+	01000100)
+		echo GDPR 欧盟 EU
+		;;
+	10001101)
+		echo GDPR 欧洲 Europe
+		;;
+	00011011)
+		echo GDPR 欧洲 Europe
+		;;
+	00011011)
+		echo IN 印度 India
+		;;
+	00110011)
+		echo ID 印度尼西亚 Indonesia
+		;;
+	00111000)
+		echo MY 马来西亚 Malaysia
+		;;
+	00111001)
+		echo TH 泰国 Thailand
+		;;
+	00111110)
+		echo PH 菲律宾 Philippines
+		;;
+	10000011)
+		echo SA 沙特阿拉伯 Saudi Arabia
+		;;
+	10011010)
+		echo LATAM 拉丁美洲 Latin America
+		;;
+	10011110)
+		echo BR 巴西 Brazil
+		;;
+	10100110)
+		echo MEA 中东和非洲 The Middle East and Africa
+		;;
+	*)
+		echo "当前国家/地区代码 = $nvid"
+		;;
+esac
 }
+
+[[ $(date "+%H%M") -lt 800 || $(date "+%H%M") -gt 2200 ]] && echo "当前系统时间 $(date "+%Y-%m-%d %H:%M:%S")，应该休息！"
+product_model=`getprop ro.product.name`
+# －型号 : `getprop ro.product.model`
+ota_version=`getprop ro.build.version.ota`
+rui_version=`getprop ro.build.version.realmeui`
 
 ui_print "
 
 ColorOS_Mod-MagiskModule version : `grep_prop version $TMPDIR/module.prop`
 
-- * Info of the device（设备信息）*
-- 商品名 : `getprop ro.vendor.oplus.market.name`
-- 品牌 : `getprop ro.product.brand`
-- 型号 : `getprop ro.product.model`
-- 代号 : `getprop ro.product.device`
-- 项目 : `getprop ro.boot.prjname`
-- 地区 : `getprop ro.product.locale`
-- nv_id : `chkNvid`
-- ColorOS 版本 : `getprop ro.build.version.oplusrom.display`
-- Android 版本 : `getprop ro.build.version.release`
-- API level (Android version) : $API
-- SOC 型号 : `getprop ro.soc.model`
-- CPU architecture : $ARCH
-- 内核版本 : `uname -a`
-- 运存大小 : `free -m|grep "Mem"|awk '{print $2}'` MB ; 已用: `free -m|grep "Mem"|awk '{print $3}'` MB ; 剩余: $((`free -m|grep "Mem"|awk '{print $2}'`-`free -m|grep "Mem"|awk '{print $3}'`)) MB
-- Swap大小 : `free -m|grep "Swap"|awk '{print $2}'` MB ; 已用: `free -m|grep "Swap"|awk '{print $3}'` MB ; 剩余: `free -m|grep "Swap"|awk '{print $4}'` MB"
+－** Info of the device（设备信息）**
+－商品名 : `getprop ro.vendor.oplus.market.name`
+－品牌 : `getprop ro.product.brand`
+－型号 : $product_model
+－代号 : `getprop ro.product.device`
+－项目 : `getprop ro.boot.prjname`
+－地区 : `getprop ro.product.locale`
+－nv_id : `chkNvid`
+－版本号/Build number : `getprop ro.build.display.id`
+－OTA Version : $ota_version
+－ColorOS 显性版本 : `getprop ro.build.version.oplusrom.display`
+－ColorOS 版本 : `getprop ro.build.version.oplusrom`
+－realmeUI Version : $rui_version
+－基线版本 : `getprop ro.build.version.incremental`
+－Android 版本 : `getprop ro.build.version.release`
+－API level (Android version) : $API
+－SOC 型号 : `getprop ro.soc.model`
+－CPU architecture : $ARCH
+－内核版本 : `uname -a`
+－运存大小 : `free -m|grep "Mem"|awk '{print $2}'` MB ; 已用: `free -m|grep "Mem"|awk '{print $3}'` MB ; 剩余: $((`free -m|grep "Mem"|awk '{print $2}'`-`free -m|grep "Mem"|awk '{print $3}'`)) MB
+－Swap大小 : `free -m|grep "Swap"|awk '{print $2}'` MB ; 已用: `free -m|grep "Swap"|awk '{print $3}'` MB ; 剩余: `free -m|grep "Swap"|awk '{print $4}'` MB"
 
-
-chmod +x $(find $MODPATH/bin)
 if [ -f $MODPATH/bin/bash ];then
-	alias BASH=$MODPATH/bin/bash
 	echo "将使用模块内置的 GNU Bash"
 elif [ -f /data/user/0/com.termux/files/usr/bin/bash ];then
-	alias BASH=/data/user/0/com.termux/files/usr/bin/bash
+	mv -f /data/user/0/com.termux/files/usr/bin/bash $MODDIR/bin/bash
 	echo "尝试用 termux 内置的 bash"
 elif [ -f /data/user/0/bin.mt.plus/files/term/usr/bin/bash ];then
-	alias BASH=/data/user/0/com.termux/files/usr/bin/bash
+	mv -f /data/user/0/com.termux/files/usr/bin/bash $MODDIR/bin/bash
 	echo "尝试用 MT管理器 内置的 bash"
 else
 	abort "有时竟一个 bash 都没有！"
 fi
+chmod +x $(find $MODPATH/bin)
+export PATH="$MODPATH/bin":"$PATH"
 
 damCM=/data/adb/modules/coloros_mod
 if [ -f $damCM/post-fs-data.sh ];then
@@ -282,15 +329,18 @@ fi
 }
 
 blMv() {
-	sed -i 's/<\!--.*-->//g' $pfd ;# 删除注释
-	sed -i '/^[[:space:]]*$/d' $pfd ;# 删除空行
+	# 删除注释
+	# sed -i '/^<\!--/,/-->$/c''' $pfd ;# 会错误地删除部分非注释
+	sed -i 's/[[:space:]]*<\!--.*-->[[:space:]]*//g' $pfd
+	# 删除空行
+	sed -i '/^[[:space:]]*$/d' $pfd
 }
 
 chkFUN() {
 if [ -z $1 ];then
 echo "未定义 $2 文件"
 else
-$3 $1 $2
+$3 "$1" "$2"
 fi
 }
 
@@ -308,20 +358,27 @@ if [[ $switch_dtbo == TRUE ]];then
 	echo " ✔ 已安装过 dtbo"
 	echo 1 >$MODPATH/dtbo_sign
 	fi
-	BASH $MODPATH/dts.sh >&2
-	if [ $? -eq 0 ];then
-		echo -e "大概是修改并刷入成功了\n欲知详情请保存安装日志（通常在右上角）\n请勿删除或移动 $damCM 目录的原版dtbo\n在将来，卸载 ColorOS_Mod 时会刷回原版 dtbo"
-	elif [ $? -eq 404 ];then
-		echo " ✘ 不支持的机型，原因：getprop ro.product.vendor.model 空值"
-	elif [ $? -eq 14 ];then
-		echo "没有当前设备 `getprop ro.product.vendor.model` 的dts配置"
-	elif [ $? -eq 13 ];then
-		echo "dtc二进制文件丢失，模块损坏？"
-	elif [ $? -eq 12 ];then
-		echo "mkdtimg二进制文件丢失，模块损坏？"
-	elif [ $? -eq 5 ];then
-		echo "虽然没有成功修改 dtbo，但可以继续下面的修改"
-	fi
+	bash $MODPATH/dts.sh >&2
+	case $? in
+		0)
+			echo -e "大概是修改并刷入成功了\n欲知详情请保存安装日志（通常在右上角）\n请勿删除或移动 $damCM 目录的原版dtbo\n在将来，卸载 ColorOS_Mod 时会刷回原版 dtbo"
+			;;
+		404)
+			echo " ✘ 不支持的机型，原因：getprop ro.product.vendor.model 空值"
+			;;
+		14)
+			echo "没有当前设备 `getprop ro.product.vendor.model` 的dts配置"
+			;;
+		13)
+			echo "dtc二进制文件丢失，模块损坏？"
+			;;
+		12)
+			echo "mkdtimg二进制文件丢失，模块损坏？"
+			;;
+		5)
+			echo "这次没有改 dtbo，但可以继续下面的修改"
+			;;
+	esac
 else
 	echo "开关已关闭，跳过修改 dtbo镜像"
 	echo 3 >$MODPATH/dtbo_sign
@@ -333,7 +390,8 @@ if [ -f $1 ];then
 	mountPfd $1
 	echo "－开始编辑$2文件：$1"
 	sed -i 's/<app_feature name=\"com.android.systemui.disable_fp_blind_unlock\"\/>//g' $pfd || abort "未知错误！请联系开发者修复！"
-	echo "已去除对息屏指纹盲解的禁用"
+	sed -i '/<app_feature name\=\"com.android.systemui.enable_fp_blind_unlock\"\/>/d' -e '/<extend_features>/a <app_feature name=\"com.android.systemui.enable_fp_blind_unlock\"\/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
+	sed -i '/<app_feature name\=\"com.android.systemui.prevented_screen_burn\"\/>/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.prevented_screen_burn"/>' $pfd && echo "<!-- indicate if the device is prevented screen burn -->"
 	blMv
 	echo "修改$2文件完成"
 else
@@ -392,18 +450,18 @@ FUN_stcc(){
 if [ -f $1 ];then
 	mountPfd $1
 	echo "－开始编辑$2文件：$1"
-	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ specificScene"
+	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' -e '/com.tencent.mm_scene_103-com.tencent.mobileqq_scene_103-com.whatsapp_scene_103/,/com.tencent.mm_scene_103-com.tencent.mobileqq_scene_103-com.whatsapp_scene_103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ 微信 WhatsApp specificScene"
 	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "已删除 specificScene 与 /specificScene 区间行"
 	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "已写回腾讯QQ specificScene"
 	sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' $pfd >$TMPDIR/specific && echo "已备份Oplus相机 specific"
 	sed -i '/specific>/,/\/specific>*/d' $pfd && echo "已删除 specific 与 /specific 区间行"
 	sed -i '/\/specificScene/ r specific' $pfd && rm -rf $TMPDIR/specific && echo "已写回Oplus相机 specific"
-	sed -i '/^[ \t]*$/d' $pfd && rm -rf specific && echo "已删除空行"
 sed -i 's/fps=\"[0-9]*/fps=\"0/g' $pfd && echo "已关闭温控锁帧率"
-sed -i 's/cpu=\"[\-0-9]*/cpu=\"-1/g' $pfd && echo "CPU -1"
-sed -i 's/gpu=\"[\-0-9]*/gpu=\"-1/g' $pfd && echo "GPU -1"
+sed -i 's/cpu=\"\-*[0-9]*/cpu=\"-1/g' $pfd && echo "CPU -1"
+sed -i 's/gpu=\"\-*[0-9]*/gpu=\"-1/g' $pfd && echo "GPU -1"
 sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' $pfd && echo "相机亮度 255"
-	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
+	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB"
+	blMv
 	echo "修改$2文件完成"
 else
 	echo " ✘ 不存在$2文件：$1" >&2
@@ -412,28 +470,7 @@ fi
 chkFUN $src_stcc "高温控制器" FUN_stcc
 
 echo2n
-FUN_stcc_gt(){
-if [ -f $1 ];then
-	mountPfd $1
-	echo "－开始编辑 $2文件：$1"
-	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_103/,/com.tencent.mobileqq_103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ specificScene"
-	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "已删除 specificScene 与 /specificScene 区间行"
-	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "已写回腾讯QQ specificScene"
-	sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' $pfd >$TMPDIR/specific && echo "已备份Oplus相机 specific"
-	sed -i '/specific>/,/\/specific>*/d' $pfd && echo "已删除 specific 与 /specific 区间行"
-	sed -i '/\/specificScene/ r specific' $pfd && rm -rf $TMPDIR/specific && echo "已写回Oplus相机 specific"
-	sed -i '/^[ \t]*$/d' $pfd && rm -rf specific && echo "已删除空行"
-sed -i 's/fps=\"[0-9]*/fps=\"0/g' $pfd && echo "已关闭温控锁帧率"
-sed -i 's/cpu=\".*\" g/cpu=\"-1\" g/g' $pfd && echo "CPU -1"
-sed -i 's/gpu=\".*\" r/gpu=\"-1\" r/g' $pfd && echo "GPU -1"
-sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' $pfd && echo "相机亮度 255"
-	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB "
-	echo "修改 $2文件完成"
-else
-	echo " ✘ 不存在 $2文件：$1" >&2
-fi
-}
-chkFUN $src_stcc_gt "realme GT模式高温控制器" FUN_stcc_gt
+chkFUN $src_stcc_gt "realme GT模式高温控制器" FUN_stcc
 
 echo2n
 FUN_shtp(){
@@ -573,13 +610,13 @@ FUN_smac(){
 if [ -f $1 ];then
 	mountPfd $1
 	echo "－开始编辑$2文件：$1"
-	sed -i 's/maxNum name="[0-9]*/maxNum name="999/' $pfd && echo "已修改应用分身数量限制改为 999"
+	sed -i 's/maxNum name="[0-9]*/maxNum name="999/' $pfd && echo "已修改$2数量限制改为 999"
 	echo "－开始添加应用到allowed列表"
 	for APKN in $APKNs
 	do
 	multiAPKN="<item\ name\=\"$APKN\"\ \/>"
 		if [[ -z "$(grep "$multiAPKN" $pfd)" ]];then
-			sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到应用分身允许名单" >&2
+			sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到$2名单" >&2
 		else
 			echo "包名：$APKN 已在应用分身名单" >&2
 		fi
@@ -618,38 +655,33 @@ fi
 chkFUN $src_blacklistMv "启动管理" FUN_blacklistMv
 
 echo2n
-FUN_blacklistMv3c(){
+chkFUN $src_blacklistMv3c "系统启动V3配置表" FUN_blacklistMv
+
+echo2n
+FUN_sdmtam(){
 if [ -f $1 ];then
 	mountPfd $1
-	echo "－开始编辑$2：$1"
-	for APKN in $blacklistAPKNs
+	echo "－开始编辑$2文件：$1"
+	for APKN in $APKNs
 	do
-		if [[ -z $(grep "$APKN" $pfd) ]];then
-			sleep 0
+		darkAPKN="<p\ attr\=\"$APKN\"\/>"
+		if [[ -z "$(grep "$darkAPKN" $pfd)" ]];then
+			sed -i '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "已新添加APP包名：$APKN 到$2" >&2
 		else
-			echo "检索到含有黑名单应用包名：$APKN 的行" >&2
-			sed -i '/'$APKN'/d' $pfd && echo "－已删除↑" >&2
+			echo "包名：$APKN 已在$2" >&2
 		fi
 	done
-	blMv
 	echo "修改$2完成"
+	echo "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常。"
 fi
 }
-chkFUN $src_blacklistMv3c "系统启动V3配置表" FUN_blacklistMv3c
+chkFUN $src_sdmtam "暗色模式第三方应用管理名单" FUN_sdmtam
 
 echo2n
-if [ -z $src_bootwhitelist ];then
-echo "未定义 ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单文件 文件"
-else
-apknAdd $src_bootwhitelist "ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单文件"
-fi
+chkFUN $src_bootwhitelist "ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单文件" apknAdd
 
 echo2n
-if [ -z $src_acwl ];then
-echo "未定义 关联启动白名单 文件"
-else
-apknAdd $src_acwl "关联启动白名单"
-fi
+chkFUN $src_acwl "关联启动白名单" apknAdd
 
 echo2n
 if [ -z $src12_bootallow ];then
@@ -691,26 +723,6 @@ else
 fi
 }
 chkFUN $src_spea "支付安全保护名单" FUN_spea
-
-echo2n
-FUN_sdmtam(){
-if [ -f $1 ];then
-	mountPfd $1
-	echo "－开始编辑$2文件：$1"
-	for APKN in $APKNs
-	do
-		darkAPKN="<p\ attr\=\"$APKN\"\/>"
-		if [[ -z "$(grep "$darkAPKN" $pfd)" ]];then
-			sed -i '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "已新添加APP包名：$APKN 到三方应用暗色名单" >&2
-		else
-			echo "包名：$APKN 已在暗色模式第三方应用管理名单" >&2
-		fi
-	done
-	echo "修改$2完成"
-	echo "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常。"
-fi
-}
-chkFUN $src_sdmtam "暗色模式第三方应用管理名单" FUN_sdmtam
 
 
 # 注释掉多余挂载命令行

@@ -20,5 +20,6 @@ MODDIR=${0%/*}
 
 # Recovery dtbo
 echo 2 >$MODDIR/dtbo_sign
+chmod +x $MODDIR/bin/bash
 $MODDIR/bin/bash $MODDIR/dts.sh
 

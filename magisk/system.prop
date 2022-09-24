@@ -28,3 +28,5 @@ ro.boot.flash.locked=0
 # ro.boot.vbmeta.device_state=unlocked
 ro.boot.verifiedbootstate=orange
 
+persist.sys.oplus.nandswap.condition=true
+
