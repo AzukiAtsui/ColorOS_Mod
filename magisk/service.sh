@@ -27,6 +27,3 @@ resetprop ro.boot.flash.locked 1
 # resetprop ro.boot.vbmeta.device_state locked
 resetprop ro.boot.verifiedbootstate green
 
-resetprop persist.sys.oplus.nandswap.condition true
-echo 1 >/sys/block/zram0/hybridswap_dev_life
-

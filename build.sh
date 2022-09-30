@@ -20,8 +20,8 @@ workdir=$(cd $(dirname $0);pwd)
 rootpath=$(cd ~;pwd)
 
 # 模块包属性
-ver=v1.1.3
-versioncode=2209251
+ver=v1.1.4
+versioncode=2209301
 zip_nm=ColorOS_Mod-$ver-$versioncode.zip
 
 upd=1
@@ -31,8 +31,20 @@ io_release=AzukiAtsui.github.io/ColorOS_Mod/release
 
 
 mChg(){
-# [Changelogs](https://azukiatsui.github.io/ColorOS_Mod/release/changelog/)
+# [All Changelogs](https://azukiatsui.github.io/ColorOS_Mod/release/changelog/)
 echo "## $ver
+### Changelog
+1. Add avb.sh
+2. Update getting info of device
+3. Revert service.sh system.prop to v1.1.2
+
+### 更新日志
+1. 新增改 vbmeta分区 16进制数据 123位flag 关AVB的方法（感谢 @情非得已c）
+2. 更新获取设备信息
+3. 回退 service.sh system.prop 两个文件到 v1.1.2 版本
+
+
+## v1.1.3
 ### Changelog
 1. Fix ERROR of recovery dtbo while uninstall
 2. Optimize existing features
@@ -40,16 +52,6 @@ echo "## $ver
 ### 更新日志
 1. 修复：卸载模块时，恢复dtbo出错
 2. 优化已有功能
-
-
-## v1.1.2
-### Changelog
-1. Update README, build.sh, dts.sh
-2. Reduce bytes
-
-### 更新日志
-1. 更新 中英文README、build.sh、dts.sh
-2. 减少字节
 " >$new_chg
 }
 
@@ -82,7 +84,6 @@ pJson(){
 		git clone -b master git@github.com:AzukiAtsui/AzukiAtsui.github.io.git
 	fi
 	mv -f $new_json $rootpath/$io_release/main.json
-	# mv -f $new_chg $rootpath/$io_release/changelog.md
 	cd $rootpath/AzukiAtsui.github.io
 	git add .
 	git commit -m "ColorOS_Mod $ver"

@@ -1,19 +1,19 @@
 # ColorOS_Mod
 
-[English version](https://github.com/AzukiAtsui/ColorOS_Mod/blob/main/README-en.md)
+## [English version &rarr;](https://github.com/AzukiAtsui/ColorOS_Mod/blob/main/README-en.md)
 
-[**更新日志**](https://azukiatsui.github.io/ColorOS_Mod/release/changelog/)
+ColorOS_Mod 是一个修改ColorOS 或 realmeUI 系统配置的 [Magisk模块](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules)，旨在实现更舒服的系统体验。禁用或卸载模块即可复原。
 
-了解更多：[**ColorOS_Mod 主页**](https://azukiatsui.github.io/2022/09/22/ColorOS_Mod/)
+了解更多：[**ColorOS_Mod 主页 &rarr;**](https://azukiatsui.github.io/2022/09/22/ColorOS_Mod/)
 
-以 [Magisk模块](https://topjohnwu.github.io/Magisk/guides.html#magisk-modules) 的形式，在模块安装过程中提取 ColorOS 或 realmeUI 底层温控、自启/应用分身名单等并加以**修改**，systemless 挂载修改后的文件来实现更舒服的系统体验。禁用或卸载模块即可复原。
+### [更新日志 &rarr;](https://azukiatsui.github.io/ColorOS_Mod/release/changelog/)
 
 ### 使用说明
 
-1. 在 [Releases](https://github.com/AzukiAtsui/ColorOS_Mod/releases) 下载最新版 _ColorOS_Mod-MagiskModule.zip_ ；
-2. 编辑 _ColorOS-latest.zip_ 内的 _customize.sh_ ，按自己喜好启用或关闭功能；
-3. 打开 Magisk 管理器，切到“模块”页；
-4. 点“从本地安装”，选中在 [Releases](https://github.com/AzukiAtsui/ColorOS_Mod/releases) 下载的 _ColorOS_Mod-MagiskModule.zip_ ；
+1. 下载[最新版 _ColorOS_Mod.zip模块包_ &rarr;](https://github.com/AzukiAtsui/ColorOS_Mod/releases/latest)；
+2. 根据你的喜好，编辑并更新模块包内的 _customize.sh_ ，启用或关闭功能；
+3. 打开 Magisk 管理器“模块”页；
+4. 点“从本地安装”，选中下载的 [ColorOS_Mod-最新版.zip](https://github.com/AzukiAtsui/ColorOS_Mod/releases/latest)；
 5. 等待安装完成，然后重启。
 
 ### 预编译的二进制文件

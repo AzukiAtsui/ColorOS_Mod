@@ -15,6 +15,7 @@ This project incorporates components from the projects listed below. The origina
 1. mkdtimg  (https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/)
 2. dtc  version 1.4.4-Android-build  (https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
 3. bash  version 5.2.0(3)-rc4  (https://www.gnu.org/software/bash/)
+4. liuran001/GJZS  Block_Device_Name.sh and Forbid_AVB.sh  (https://github.com/liuran001/GJZS)
 
 
 mkdtimg NOTICES AND INFORMATION BEGIN HERE
@@ -659,4 +660,16 @@ Bash is free software; you can redistribute it and/or modify it under the terms 
 
 =========================================
 END OF bash NOTICES AND INFORMATION
+
+
+liuran001/GJZS NOTICES AND INFORMATION BEGIN HERE
+=========================================
+
+/app/src/main/assets/usr/kr-script/Block_Device_Name.sh and /app/src/main/assets/usr/kr-script/Forbid_AVB.sh
+Copyright © 2021  Han | 情非得已c
+
+liuran001/GJZS is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
+
+=========================================
+END OF liuran001/GJZS NOTICES AND INFORMATION
 

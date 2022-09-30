@@ -112,8 +112,9 @@ mkdtimg create $1 --page_size=4096 $(find $DTSTMP -name "$2.*")
 flashDtbo(){
 	chkSlot
 	dd if=$new_dtbo of=/dev/block/by-name/dtbo$SLOT
-	BOOTIMAGE="/dev/block/by-name/boot$SLOT"
-	install_magisk >/dev/null 2>&1
+	# BOOTIMAGE="/dev/block/by-name/boot$SLOT"
+	# install_magisk >/dev/null 2>&1
+	AVB_flag=3 . $MODDIR/avb.sh
 	echo 1 >$dtbo_sign
 	exit 0
 }
@@ -143,9 +144,7 @@ fi
 }
 
 case $(cat $dtbo_sign) in
-	1)
-		bk2up
-		;;
+	1) bk2up;;
 	2)
 		echo "还原备份的dtbo"
 		chkSlot
@@ -157,13 +156,10 @@ case $(cat $dtbo_sign) in
 		fi
 		BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 		install_magisk >/dev/null 2>&1
+		# AVB_flag=3 . $MODDIR/avb.sh
 		;;
-	3)
-		bk2up
-		;;
-	*)
-		main
-		;;
+	3) bk2up;;
+	*) main;;
 esac
 exit 5
 
