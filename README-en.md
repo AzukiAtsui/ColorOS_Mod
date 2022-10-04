@@ -11,7 +11,7 @@ More info: [**ColorOS_Mod Homepage &rarr;**](https://azukiatsui.github.io/2022/0
 ### INSTRUCTIONS
 
 1. Download [latest version ColorOS_Mod.zip &rarr;](https://github.com/AzukiAtsui/ColorOS_Mod/releases/latest);
-2. Edit the _customize.sh_ in _ColorOS_Mod-latest-version.zip_ to turn off/on the functions in your own preference;
+2. Edit the _switches.sh_ and _customize.sh_ in _ColorOS_Mod-latest-version.zip_ to turn off/on the functions in your own preference. Edit _ColorOS_Mod.zip/blacklist_ to confirm what app package name are in your blacklist;
 3. Start Magisk app, switch to the "Modules" page;
 4. Click "Install from the storage" and select the [_ColorOS_Mod-latest-version.zip_](https://github.com/AzukiAtsui/ColorOS_Mod/releases/latest);
 5. Wait for successful Installation then restart.

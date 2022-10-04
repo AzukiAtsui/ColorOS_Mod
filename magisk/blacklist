@@ -1,0 +1,8 @@
+# 黑名单应用包名
+blacklistAPKNs="
+com.xunmeng.pinduoduo
+com.nearme.instant.platform
+com.heytap.book
+com.oppo.book
+"
+

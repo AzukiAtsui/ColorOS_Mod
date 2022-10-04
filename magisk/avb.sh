@@ -1,6 +1,6 @@
 #
 # This file is part of ColorOS_Mod.
-# Copyright (C) 2022  AzukiAtsui
+# Copyright 2022 AzukiAtsui
 # Codes in this file was mainly writed by Han | 情非得已c , used in 搞机助手. see /app/src/main/assets/usr/kr-script/Block_Device_Name.sh and /app/src/main/assets/usr/kr-script/Forbid_AVB.sh in <https://github.com/liuran001/GJZS>
 #
 # ColorOS_Mod is free software: you can redistribute it and/or modify
@@ -17,26 +17,22 @@
 # along with ColorOS_Mod.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-#
 # To use this script, set environment variable AVB_flag to [0-3].
 # 0 to enable AVB;
 # 1 to diable dm-verity (disable-verity);
 # 2 to diable boot verification (diable-verification);
 # 3 to disable both (similar to `fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img`).
-# Example: `AVB_flag=3 . avb.sh`
+# Example: `AVB_flag=3 bash avb.sh`
 #
 # For more info of AVB (Android Verified Boot), see <https://source.android.com/docs/security/features/verifiedboot/avb>
-#
 
+# For more info of magisk busybox, see <https://topjohnwu.github.io/Magisk/guides.html#busybox>
+busybox="/data/adb/magisk/busybox"
 
 abort() {
 echo -e "$1" 1>&2
 exit 1
 }
-
-# For more info of magisk busybox, see <https://topjohnwu.github.io/Magisk/guides.html#busybox>
-alias AWK="/data/adb/magisk/busybox awk"
-alias BLOCKDEV="/data/adb/magisk/busybox blockdev"
 
 BlockByName() {
 a=0
@@ -56,17 +52,17 @@ done | sort -u | while read Row
 do
 		BLOCK=`find /dev/block -name $Row | head -n 1`
 		# BLOCK2=`readlink -e $BLOCK`
-	size=`BLOCKDEV --getsize64 $BLOCK`
+	size=`$busybox blockdev --getsize64 $BLOCK`
 	if [[ $size -ge 1073741824 ]]; then
-		File_Type=`AWK "BEGIN{print $size/1073741824}"`G
+		Bsize=`$busybox awk "BEGIN{print $size/1073741824}"`G
 	elif [[ $size -ge 1048576 ]]; then
-		File_Type=`AWK "BEGIN{print $size/1048576}"`MB
+		Bsize=`$busybox awk "BEGIN{print $size/1048576}"`MB
 	elif [[ $size -ge 1024 ]]; then
-		File_Type=`AWK "BEGIN{print $size/1024}"`kb
+		Bsize=`$busybox awk "BEGIN{print $size/1024}"`kb
 	elif [[ $size -le 1024 ]]; then
-		File_Type=${size}b
+		Bsize=${size}b
 	fi
-	echo "$BLOCK|$Row 「大小 (Block size)：$File_Type」"
+	echo "$BLOCK|$Row 「大小 (Size)：$Bsize」"
 done
 }
 
@@ -76,7 +72,7 @@ while read line
 do
 	[[ -z `strings $line` ]] && continue
 	typeset -u jz
-	jz=`busybox od -w16 -An -tx1 "$line" | grep -i -B 2 '61 76 62 74 6f 6f 6c 20' | tr -d '[:space:]' | grep -E -oi '0000000000000000000000..00000000617662746f6f6c20'`
+	jz=`$busybox od -w16 -An -tx1 "$line" | grep -i -B 2 '61 76 62 74 6f 6f 6c 20' | tr -d '[:space:]' | grep -E -oi '0000000000000000000000..00000000617662746f6f6c20'`
 	[[ -z "$jz" ]] && continue
 	/data/adb/magisk/magiskboot hexpatch "$line" $jz 00000000000000000000000${AVB_flag}00000000617662746F6F6C20 &>/dev/null || abort "FAILED! Patch vbmeta hex data failed !!!"
 done <<eof

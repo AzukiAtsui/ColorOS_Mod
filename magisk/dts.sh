@@ -1,6 +1,6 @@
 #
 # This file is part of ColorOS_Mod.
-# Copyright (C) 2022  AzukiAtsui
+# Copyright 2022 AzukiAtsui
 #
 # ColorOS_Mod is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,15 +18,13 @@
 
 MODDIR=${0%/*}
 dtbo_sign=$MODDIR/dtbo_sign
-verid=$(getprop ro.build.display.id) ;# 版本号/Build number
-# realmeGTNeo2domestic's model_nm=RMX3370
-model_nm=$(getprop ro.product.vendor.model)
-[ -z $model_nm ] && exit 404
-id_config="$MODDIR/dts_configs/${model_nm}.txt"
+verid=$(getprop ro.build.display.id)
+id_config="$MODDIR/dts_configs"
 [[ ! -f $id_config && $(cat $dtbo_sign) -ne 2 ]] && exit 14
 [ -f $MODDIR/bin/dtc ] || exit 13
 [ -f $MODDIR/bin/mkdtimg ] || exit 12
-dtbo_nm=dtbo-${model_nm}-${verid##*_}.img
+[ -f $MODDIR/bin/bash ] || exit 11
+dtbo_nm=dtbo-${verid}.img
 org_dtbo=$MODDIR/原版-$dtbo_nm
 new_dtbo=$MODDIR/new-$dtbo_nm
 damCM=/data/adb/modules/coloros_mod
@@ -74,18 +72,18 @@ do
 	acc[$i]="$line"
 	let i++
 done <$id_config
-echo "$id_config 共 $i 行"
+echo "Lines $i"
 
 j=0
 while ((j < i))
 do
 	val1="${acc[$j]}"
 	((j++))
-	val2=${acc[$j]}
+	val2="${acc[$j]}"
 	# patch1=`grep -l -r -n "$val1" $DTSTMP`
-	for patch1 in `grep -l -r -n "$val1" $DTSTMP`;do
+	for patch1 in `grep -l -r -n "$(echo $val1 | sed 's/ <\.\*>//')" $DTSTMP`;do
 	[ -z $patch1 ] && continue
-	echo -e "\n开始修改${patch1##*/} :\n$val1"
+	echo -e "\n开始修改${patch1##*/} :\n$(echo $val1 | sed 's/ <\.\*>//')"
 	sed -i "s/${val1}/${val2}/g" $patch1
 		if [ $? -ne 0 ];then
 			echo "line $(( $j )) failed!"
@@ -114,7 +112,7 @@ flashDtbo(){
 	dd if=$new_dtbo of=/dev/block/by-name/dtbo$SLOT
 	# BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 	# install_magisk >/dev/null 2>&1
-	AVB_flag=3 . $MODDIR/avb.sh
+	AVB_flag=3 bash $MODDIR/avb.sh
 	echo 1 >$dtbo_sign
 	exit 0
 }
@@ -156,7 +154,7 @@ case $(cat $dtbo_sign) in
 		fi
 		BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 		install_magisk >/dev/null 2>&1
-		# AVB_flag=3 . $MODDIR/avb.sh
+		# AVB_flag=3 bash $MODDIR/avb.sh
 		;;
 	3) bk2up;;
 	*) main;;

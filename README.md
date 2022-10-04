@@ -11,7 +11,7 @@ ColorOS_Mod 是一个修改ColorOS 或 realmeUI 系统配置的 [Magisk模块](h
 ### 使用说明
 
 1. 下载[最新版 _ColorOS_Mod.zip模块包_ &rarr;](https://github.com/AzukiAtsui/ColorOS_Mod/releases/latest)；
-2. 根据你的喜好，编辑并更新模块包内的 _customize.sh_ ，启用或关闭功能；
+2. 根据你的喜好，编辑并更新模块包内的 _switches.sh_ 和 _customize.sh_ ，启用或关闭功能，编辑并更新模块包内的 _blacklist_ 确认黑名单app包名；
 3. 打开 Magisk 管理器“模块”页；
 4. 点“从本地安装”，选中下载的 [ColorOS_Mod-最新版.zip](https://github.com/AzukiAtsui/ColorOS_Mod/releases/latest)；
 5. 等待安装完成，然后重启。

@@ -1,0 +1,3 @@
+# Third party enabled packages by default
+APKNs=$(pm list packages -e -3 | sed 's/.*://')
+
