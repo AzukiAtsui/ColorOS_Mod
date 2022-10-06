@@ -22,7 +22,7 @@ year=$(date "+%Y")
 
 # 模块包属性
 ver=v1.1.6
-dayno=2
+dayno=3
 [ "$debug" -eq 1 ] && ver=debug
 versioncode="${year: -2}$(date "+%m%d")$dayno"
 zip_nm=ColorOS_Mod-$ver-$versioncode.zip
@@ -38,9 +38,11 @@ mChg(){
 echo "### $ver
 #### Changelog
 1. Continue the work of v1.1.5 changelog point 2 ~ 4.
+2. Back to \`install_magisk\` to disable AVB.
 
 #### 更新日志
 1. 继续v1.1.5更新日志中第2~4点的工作。
+2. 重新回到安装面具来关AVB。
 
 ### v1.1.5
 #### Changelog

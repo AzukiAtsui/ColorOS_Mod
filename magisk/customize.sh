@@ -101,7 +101,7 @@ echo2n
 if [[ $(cat /sys/devices/soc0/family) == Snapdragon ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！";else unset $switch_dtbo;echo -e "\n修改 dtbo 仅支持高通平台设备！";fi
 if [[ $switch_dtbo == TRUE ]];then
 	echo "－开始修改 dtbo镜像"
-	echo -e "－Once dtbo or other critical partitions had been flashed, \n  Android Verified Boot should be disabled by \n  	\`AVB_flag=3 bash ColorOS_Mod/avb.sh\`\n  just in case RED STATE STUCK."
+	echo -e "－Once dtbo or other critical partitions had been flashed,\n    Android Verified Boot must be disabled\n    just in case RED STATE STUCK.    DO DIRECT INSTALL in Magisk25+ app to disable AVB."
 	if [[ `cat $damCM/sign/dtbo` -eq 1 ]];then echo " ✔ 已刷入过修改后的 dtbo";echo 1 >$MODSIGN/dtbo;fi
 	bash $MODSCRIPT/dts.sh >&2
 	case $? in

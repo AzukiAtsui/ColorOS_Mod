@@ -1,9 +1,11 @@
 ### v1.1.6
 #### Changelog
 1. Continue the work of v1.1.5 changelog point 2 ~ 4.
+2. Back to `install_magisk` to disable AVB.
 
 #### 更新日志
 1. 继续v1.1.5更新日志中第2~4点的工作。
+2. 重新回到安装面具来关AVB。
 
 ### v1.1.5
 #### Changelog
