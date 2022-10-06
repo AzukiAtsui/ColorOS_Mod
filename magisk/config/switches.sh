@@ -1,5 +1,3 @@
-# . $MODPATH/switches.sh
-
 # 在不需要修改的文件变量定义命令行开头加 '#'（井号）
 # 来在模块安装阶段跳过对它们的所有修改。
 # 变量是指 '='（等号）前 src_*、switch_* 的英文。
@@ -32,9 +30,9 @@ src_stcc=/odm/etc/temperature_profile/sys_thermal_control_config.xml
 src_stcc_gt=/odm/etc/temperature_profile/sys_thermal_control_config_gt.xml
 
 # 高温保护
-src_shtp=/odm/etc/temperature_profile/$(for i in /odm/etc/temperature_profile/sys_high_temp_protect*.xml;do echo ${i##*/};done)
+src_shtp=`echo /odm/etc/temperature_profile/sys_high_temp_protect*.xml`
 
-# 温控
+# 高热配置
 src_stc=/odm/etc/ThermalServiceConfig/sys_thermal_config.xml
 
 # 加密温控
@@ -50,60 +48,30 @@ src_apn=/system/product/etc/apns-conf.xml
 list_hybridswap=$(ls -l /sys/block/zram0/hybridswap_* | grep ^'\-rw\-' | awk '{print $NF}')
 
 # The config path of App cloner (应用分身) is same in Android 12 and Android 13.
-for i in /system_ext/oppo/sys_multi_app_config.xml /system_ext/oplus/sys_multi_app_config.xml;do
-	[ -f $i ] && src_smac=$i
-	if [ -z $src_smac ];then
-		echo " ✘ There is not the App cloner config file：$i" >&2
-	else break;fi;done
+src_smac=`find /system_ext/oppo/ /system_ext/oplus/ -type f -iname "sys_multi_app_config.xml"`
 
 # 启动管理  删除黑名单应用（blacklist文件中 blacklistAPKNs变量）
-for i in /data/oppo/coloros/startup/startup_manager.xml /data/oplus/os/startup/startup_manager.xml;do
-	[ -f $i ] && src_blacklistMv=$i
-	if [ -z $src_blacklistMv ];then
-		echo " ✘ 不存在欧加启动管理：$i" >&2
-	else break;fi;done
+src_blacklistMv=`find /data/oplus/os/startup/ /data/oppo/coloros/startup/ -type f -iname "startup_manager.xml"`
 # 启动V3配置列表  删除黑名单应用
-for i in /data/oppo/coloros/startup/sys_startup_v3_config_list.xml /data/oplus/os/startup/sys_startup_v3_config_list.xml;do
-	[ -f $i ] && src_blacklistMv3c=$i
-	if [ -z $src_blacklistMv3c ];then
-		echo " ✘ 不存在启动V3配置列表：$i" >&2
-	else break;fi;done
+src_blacklistMv3c=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "sys_startup_v3_config_list.xml"`
 
 # 暗色模式第三方应用管理  内含强制启用深色模式的App包名
-for i in /data/oplus/os/darkmode/sys_dark_mode_third_app_managed.xml /data/oppo/coloros/darkmode/sys_dark_mode_third_app_managed.xml;do
-	[ -f $i ] && src_sdmtam=$i
-	if [ -z $src_sdmtam ];then
-		echo " ✘ 不存在暗色模式第三方应用管理文件：$i" >&2
-	else break;fi;done
+src_sdmtam=`find /data/oplus/os/darkmode/ /data/oppo/coloros/darkmode/ -type f -iname "sys_dark_mode_third_app_managed.xml"`
 
 # ColorOS 12 自启动白名单 系统推荐自启动的App包名列表 不在bootwhitelist.txt中的App占用不推荐自启的名额; Android 13 变为允许自启动而非推荐
-for i in /data/oppo/coloros/startup/bootwhitelist.txt /data/oplus/os/startup/bootwhitelist.txt;do
-	[ -f $i ] && src_bootwhitelist=$i
-	if [ -z $src_bootwhitelist ];then
-		echo " ✘ 不存在ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单文件：$i" >&2
-	else break;fi;done
+src_bootwhitelist=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootwhitelist.txt"`
 
 # 关联启动白名单
-for i in /data/oppo/coloros/startup/associate_white_list.txt /data/oplus/os/startup/associate_white_list.txt;do
-	[ -f $i ] && src_acwl=$i
-	if [ -z $src_acwl ];then
-		echo " ✘ 不存在关联启动白名单：$i" >&2
-	else break;fi;done
+src_acwl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "associate_white_list.txt"`
 
 # 自启动允许 ColorOS 12
 if [[ $API -lt 33 ]];then
-	for i in /data/oppo/coloros/startup/bootallow.txt /data/oplus/os/startup/bootallow.txt;do
-		[ -f $i ] && src12_bootallow="$i"
-		if [ -z $src12_bootallow ];then
-			echo " ✘ 不存在ColorOS 12 自启动允许文件：$i" >&2
-		else break;fi;done;fi
+src12_bootallow=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootallow.txt"`
+sleep 0;fi
 # Android 13 版本
 if [[ $API -eq 33 ]];then
-	for i in /data/oppo/coloros/startup/autostart_white_list.txt /data/oplus/os/startup/autostart_white_list.txt;do
-		[ -f $i ] && src13_awl="$i"
-		if [ -z $src13_awl ];then
-			echo " ✘ 不存在ColorOS 13 自启动白名单文件：$i" >&2
-		else break;fi;done;fi
+src13_awl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "autostart_white_list.txt"`
+sleep 0;fi
 
 # 欧加桌面 (Oplus launcher) 配置  最近任务管理可锁定数量
 src_bgApp=/data/user_de/0/com.android.launcher/shared_prefs/Configuration.xml

@@ -17,6 +17,10 @@
 #
 
 MODDIR=${0%/*}
+MODBIN=$MODDIR/bin
+MODCONFIG=$MODDIR/config
+MODSCRIPT=$MODDIR/script
+MODSIGN=$MODDIR/sign
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
   sleep 1
@@ -31,9 +35,9 @@ APKNs=$(pm list packages -3 | sed 's/.*://')
 source $MODDIR/blacklist
 
 for APKN in $APKNs;do multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-	if [[ -z "$(grep "$multiAPKN" $appClonerList)" ]];then
+	[[ -f $appClonerList ]] && if [[ -z "$(grep "$multiAPKN" $appClonerList)" ]];then
 		# Add new-installed third party app package name to the list.
 		sed -i '/<allowed>/a'"$multiAPKN" $appClonerList;fi
-	if [[ -z "$(grep "$APKN" $bootallow13List)" ]];then sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $bootallow13List;fi
-	if [[ -z "$(grep "$APKN" $associatedList)" ]];then sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $associatedList;fi;done
+	[[ -f $bootallow13List && $(cat $MODSIGN/src13_awl) == 1 ]] && if [[ -z "$(grep "$APKN" $bootallow13List)" ]];then sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $bootallow13List;fi
+	[[ -f $associatedList && $(cat $MODSIGN/src_acwl) == 1 ]] && if [[ -z "$(grep "$APKN" $associatedList)" ]];then sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $associatedList;fi;done
 

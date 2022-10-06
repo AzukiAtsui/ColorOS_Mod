@@ -17,8 +17,12 @@
 #
 
 MODDIR=${0%/*}
+MODBIN=$MODDIR/bin
+MODCONFIG=$MODDIR/config
+MODSCRIPT=$MODDIR/script
+MODSIGN=$MODDIR/sign
 swapfile_path=/data/nandswap/swapfile
-hybridswap_sign=$MODDIR/hybridswap_sign
+hybridswap_sign=$MODSIGN/hybridswap
 
 toolkit() {
 if [[ -f /system/bin/swapon ]];then

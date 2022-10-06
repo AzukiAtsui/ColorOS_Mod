@@ -1,0 +1,6 @@
+*.zip
+*.img
+magisk/dts/
+magisk/sign/
+!magisk/sign/.placeholder
+

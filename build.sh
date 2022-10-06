@@ -18,10 +18,13 @@
 
 workdir=$(cd $(dirname $0);pwd)
 rootpath=$(cd ~;pwd)
+year=$(date "+%Y")
 
 # 模块包属性
-ver=v1.1.5
-versioncode=2210051
+ver=v1.1.6
+dayno=2
+[ "$debug" -eq 1 ] && ver=debug
+versioncode="${year: -2}$(date "+%m%d")$dayno"
 zip_nm=ColorOS_Mod-$ver-$versioncode.zip
 
 upd=1
@@ -32,14 +35,21 @@ io_release=AzukiAtsui.github.io/ColorOS_Mod/release
 
 mChg(){
 # [All Changelogs](https://azukiatsui.github.io/ColorOS_Mod/release/changelog/)
-echo "## $ver
-### Changelog
+echo "### $ver
+#### Changelog
+1. Continue the work of v1.1.5 changelog point 2 ~ 4.
+
+#### 更新日志
+1. 继续v1.1.5更新日志中第2~4点的工作。
+
+### v1.1.5
+#### Changelog
 1. Update binaries compiled using NDK_r24 aarch64-linux-android31-clang. Thank [affggh](https://github.com/affggh/) and [望月古川](http://www.coolapk.com/u/843974).
 2. Optimize process.
 3. New dynamically update \"App cloner\" allowed list, Auto/Assosiated lanch recommend list.
 4. Detach blacklist, whitelist and switches.sh from customize.sh for better modifing them and better repeatedly sourcing them. 
 
-### 更新日志
+#### 更新日志
 1. 更新使用 NDK_r24 aarch64-linux-android31-clang 编译的二进制。感谢 [affggh](https://github.com/affggh/) 和 [望月古川](http://www.coolapk.com/u/843974)。
 2. 优化流程。
 3. 新增动态更新应用分身允许名单、推荐自启/关联启动名单。
@@ -47,13 +57,21 @@ echo "## $ver
 " >$new_chg
 }
 
+rmTmp(){
+rm -rf `find $workdir -type f -iname "*.zip"` `find $workdir -type f -iname '*.img'` dts sign
+[ -d ./sign ] || mkdir -p ./sign
+touch ./sign/'.placeholder'
+}
+
 mZip(){
 if [ -d $workdir/magisk ];then
 	pushd $workdir/magisk >/dev/null
+	rmTmp
+	chmod -R 777 *
 		sed -i 's/version=.*/version='$ver'/g' module.prop
 		sed -i 's/versioncode=.*/versioncode='$versioncode'/g' module.prop
-		7z a -r $zip_nm * 2>/dev/null >/dev/null
-		mv -f $zip_nm $workdir/..
+		7z a -r $zip_nm * >/dev/null
+		mv -f $zip_nm $workdir
 	popd >/dev/null
 fi
 }
@@ -94,11 +112,11 @@ pvTag(){
 }
 
 main(){
-	# mJson
-	# mChg
 	mZip
-	# pJson
-	# if [ $? -eq 4 ];then return 66;fi
+	mJson
+	mChg
+	pJson
+	if [ $? -eq 4 ];then return 66;fi
 	pvTag
 }
 

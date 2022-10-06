@@ -17,9 +17,13 @@
 #
 
 MODDIR=${0%/*}
+MODBIN=$MODDIR/bin
+MODCONFIG=$MODDIR/config
+MODSCRIPT=$MODDIR/script
+MODSIGN=$MODDIR/sign
 
 # Recovery dtbo
-echo 2 >$MODDIR/dtbo_sign
-chmod +x $MODDIR/bin/bash
-$MODDIR/bin/bash $MODDIR/dts.sh
+echo 2 >$MODSIGN/dtbo
+chmod +x $MODBIN/bash
+$MODBIN/bash $MODSCRIPT/dts.sh
 

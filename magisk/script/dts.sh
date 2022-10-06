@@ -16,14 +16,20 @@
 # along with ColorOS_Mod.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-MODDIR=${0%/*}
-dtbo_sign=$MODDIR/dtbo_sign
+MODDIR=$(cd "${0%/*}/..";pwd)
+MODBIN=$MODDIR/bin
+MODCONFIG=$MODDIR/config
+MODSCRIPT=$MODDIR/script
+MODSIGN=$MODDIR/sign
+dtbo_sign=$MODSIGN/dtbo
 verid=$(getprop ro.build.display.id)
-id_config="$MODDIR/dts_configs"
+id_config="$MODCONFIG/dts"
 [[ ! -f $id_config && $(cat $dtbo_sign) -ne 2 ]] && exit 14
-[ -f $MODDIR/bin/dtc ] || exit 13
-[ -f $MODDIR/bin/mkdtimg ] || exit 12
-[ -f $MODDIR/bin/bash ] || exit 11
+chmod +x $(find $MODBIN)
+export PATH="$MODBIN":"$PATH"
+[[ -z $($MODBIN/dtc -v | grep 'Version') ]] && exit 13
+[[ -z $($MODBIN/mkdtimg help all | grep 'cfg_create') ]] && exit 12
+[[ -z $($MODBIN/bash --version | grep 'version') ]] && exit 11
 dtbo_nm=dtbo-${verid}.img
 org_dtbo=$MODDIR/原版-$dtbo_nm
 new_dtbo=$MODDIR/new-$dtbo_nm
@@ -32,8 +38,7 @@ bk_dtbo=$damCM/原版-$dtbo_nm
 bkn_dtbo=$damCM/new-$dtbo_nm
 DTSTMP=$MODDIR/dts
 [[ -d $DTSTMP ]] || mkdir -p $DTSTMP
-export PATH="$MODDIR/bin":"$PATH"
-. /data/adb/magisk/util_functions.sh
+source /data/adb/magisk/util_functions.sh
 
 chkSlot(){
 	SLOT=`grep_cmdline androidboot.slot_suffix`
@@ -112,7 +117,7 @@ flashDtbo(){
 	dd if=$new_dtbo of=/dev/block/by-name/dtbo$SLOT
 	# BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 	# install_magisk >/dev/null 2>&1
-	AVB_flag=3 bash $MODDIR/avb.sh
+	AVB_flag=3 bash $MODSCRIPT/avb.sh
 	echo 1 >$dtbo_sign
 	exit 0
 }
@@ -154,7 +159,7 @@ case $(cat $dtbo_sign) in
 		fi
 		BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 		install_magisk >/dev/null 2>&1
-		# AVB_flag=3 bash $MODDIR/avb.sh
+		# AVB_flag=3 bash $MODSCRIPT/avb.sh
 		;;
 	3) bk2up;;
 	*) main;;
