@@ -23,6 +23,9 @@ src_ovc=/my_product/etc/oplus_vrr_config.json
 # 视频播放器帧率控制
 src_mdpl=/my_product/vendor/etc/multimedia_display_perf_list.xml
 
+# 车联
+src_fcl=/my_stock/etc/extension/feature_carlink.xml
+
 # 系统高温控制配置  去除ColorOS（realme 非GT模式）游戏锁帧率等限制（fps=0; 修改GPU、CPU为 -1 ; 严格(restrict) 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB 后面的值都改成 0）
 src_stcc=/odm/etc/temperature_profile/sys_thermal_control_config.xml
 

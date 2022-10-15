@@ -1,5 +1,6 @@
 *.zip
 *.img
+*.json
 magisk/dts/
 magisk/sign/
 !magisk/sign/.placeholder

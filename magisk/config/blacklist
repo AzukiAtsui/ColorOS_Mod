@@ -1,8 +1,20 @@
-# 黑名单应用包名
-blacklistAPKNs="
-com.xunmeng.pinduoduo
+# Pre-installed  预装
+blacklistAPKNsS="
 com.nearme.instant.platform
 com.heytap.book
 com.oppo.book
+"
+
+# Third party  第三方
+blacklistAPKNs3="
+com.xunmeng.pinduoduo
+com.kuaishou.nebula
+"
+
+# All the blacklist application package names. Edit the 'blacklistAPKNs3' and 'blacklistAPKNsS' above instead of 'blacklistAPKNs' below.
+# 全部的黑名单应用包名  改上面两个变量即可
+blacklistAPKNs="
+$blacklistAPKNs3
+$blacklistAPKNsS
 "
 

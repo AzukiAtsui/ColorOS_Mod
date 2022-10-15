@@ -31,7 +31,6 @@ MODBIN=$MODPATH/bin
 MODCONFIG=$MODPATH/config
 MODSCRIPT=$MODPATH/script
 MODSIGN=$MODPATH/sign
-echo -e "\n\n`grep_prop name $TMPDIR/module.prop`-MagiskModule version : `grep_prop version $TMPDIR/module.prop`\n		versionCode : `grep_prop versioncode $TMPDIR/module.prop`"
 
 # 安装前，在模块包/config/switches.sh 确认修改的文件
 source $MODCONFIG/switches.sh
@@ -46,6 +45,22 @@ source $MODCONFIG/blacklist
 # 打印设备信息
 source $MODSCRIPT/sysprop.sh
 
+# 打印模块信息
+MODID=`grep_prop id $TMPDIR/module.prop`
+MODNAME=`grep_prop name $TMPDIR/module.prop`
+MODVER=`grep_prop version $TMPDIR/module.prop`
+MODVERCODE=`grep_prop versioncode $TMPDIR/module.prop`
+MODAUTH=`grep_prop author $TMPDIR/module.prop`
+MODDES=`grep_prop description $TMPDIR/module.prop`
+echo ""
+echo "－** 模块信息 (MODULE INFO) **"
+echo "－名称 (name) : $MODNAME"
+echo "－版本 (version) : $MODVER"
+echo "－版本号 (versioncode) : $MODVERCODE"
+echo "－作者 (author) : $MODAUTH"
+echo "－描述 (description) : $MODDES"
+echo ""
+
 termuxBash=/data/user/0/com.termux/files/usr/bin/bash
 mtBash=/data/user/0/bin.mt.plus/files/term/usr/bin/bash
 if [ -f $MODBIN/bash ];then echo "将使用模块内置的 GNU Bash"
@@ -55,7 +70,7 @@ else abort "有时竟一个 bash 都没有！";fi
 chmod +x $(find $MODBIN)
 export PATH="$MODBIN:$PATH"
 
-damCM=/data/adb/modules/$(grep_prop id $TMPDIR/module.prop)
+damCM=/data/adb/modules/$MODID
 if [ -f $damCM/post-fs-data.sh ];then cat $damCM/post-fs-data.sh | grep 'mount --bind' | sed -n 's/^[# ]*mount --bind .* \//umount \//g;p' >$TMPDIR/umount.sh
 	. $TMPDIR/umount.sh 2>/dev/null;fi
 
@@ -85,10 +100,7 @@ if [[ $1 == $src_acwl ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${1##*/}"
 }
 
 blMv() {
-	# 删除注释
-	# sed -i '/^<\!--/,/-->$/c''' $pfd ;# 会错误地删除部分非注释
-	sed -i 's/[[:space:]]*<\!--.*-->[[:space:]]*//g' $pfd
-	# 删除空行
+	sed -i -e 's/[[:space:]]*<\!--.*-->[[:space:]]*//g' -e '/<\!--/,/-->/c'"" $pfd
 	sed -i '/^[[:space:]]*$/d' $pfd
 }
 
@@ -98,10 +110,10 @@ chkFUN() { if [ -z $1 ];then echo "未定义 $2 文件";else $3 "$1" "$2文件";
 echo -e "\n\n######### 开始修改系统文件 #########"
 
 echo2n
-if [[ $(cat /sys/devices/soc0/family) == Snapdragon ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！";else unset $switch_dtbo;echo -e "\n修改 dtbo 仅支持高通平台设备！";fi
+if [[ $(cat /sys/devices/soc0/family) == Snapdragon ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！\n";else unset $switch_dtbo;echo "修改 dtbo 仅支持高通平台设备！";fi
 if [[ $switch_dtbo == TRUE ]];then
 	echo "－开始修改 dtbo镜像"
-	echo -e "－Once dtbo or other critical partitions had been flashed,\n    Android Verified Boot must be disabled\n    just in case RED STATE STUCK.    DO DIRECT INSTALL in Magisk25+ app to disable AVB."
+	echo -e "－Once dtbo or other critical partitions had been flashed, Android Verified Boot must be disabled just in case RED STATE STUCK.\n    DO DIRECT INSTALL in Magisk25+ app to disable AVB."
 	if [[ `cat $damCM/sign/dtbo` -eq 1 ]];then echo " ✔ 已刷入过修改后的 dtbo";echo 1 >$MODSIGN/dtbo;fi
 	bash $MODSCRIPT/dts.sh >&2
 	case $? in
@@ -110,6 +122,7 @@ if [[ $switch_dtbo == TRUE ]];then
 		13) echo "无可用的dtc二进制文件";;
 		12) echo "无可用的mkdtimg二进制文件";;
 		11) echo "无可用的bash二进制文件";;
+		8) echo "Jeez, 修改失败了！";;
 		5) echo "这次没有改 dtbo，但可以继续下面的修改";;
 	esac
 else echo "开关已关闭，跳过修改 dtbo镜像";echo 3 >$MODSIGN/dtbo;fi
@@ -118,9 +131,10 @@ FUN_fccas() {
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -i 's/<app_feature name=\"com.android.systemui.disable_fp_blind_unlock\"\/>//g' $pfd || abort "未知错误！请联系开发者修复！"
-	sed -i -e '/<app_feature name\=\"com.android.systemui.enable_fp_blind_unlock\"\/>/d' -e '/<extend_features>/a <app_feature name=\"com.android.systemui.enable_fp_blind_unlock\"\/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
-	sed -i -e '/<app_feature name\=\"com.android.systemui.prevented_screen_burn\"\/>/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.prevented_screen_burn"/>' $pfd && echo "<!-- indicate if the device is prevented screen burn -->"
+	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "未知错误！请联系开发者修复！"
+	sed -i -e '/enable_fp_blind_unlock/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.enable_fp_blind_unlock"/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
+	sed -i -e '/prevented_screen_burn/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.prevented_screen_burn"/>' $pfd && echo "<!-- indicate if the device is prevented screen burn -->"
+	sed -i '/disable_volume_blur/d' $pfd && echo "去除禁用音量面板模糊"
 	blMv
 	echo "修改$2完成"
 else echo " ✘ 不存在$2：$1" >&2;fi
@@ -131,7 +145,7 @@ FUN_rpref(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -i '/<app_feature name=\"com.android.settings.move_dc_to_develop\"\/>/d' $pfd && echo "已删除移动DC调光到开发者选项设置"
+	sed -i '/move_dc_to_develop/d' $pfd && echo "已删除移动DC调光到开发者选项设置"
 	blMv
 	echo -e "修改$2完成"
 else echo " ✘ 不存在$2：$1" >&2;fi
@@ -142,7 +156,7 @@ FUN_rcc(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -i 's/rateId=\"[0-9]-[0-9]-[0-9]-[0-9]/rateId=\"3-1-2-3/g' $pfd && echo "已全局改刷新率模式为 3-1-2-3"
+	sed -i 's/rateId="[0-9]-[0-9]-[0-9]-[0-9]/rateId="3-1-2-3/g' $pfd && echo "已全局改刷新率模式为 3-1-2-3"
 	sed -i 's/enableRateOverride="true/enableRateOverride="false/g' $pfd && echo "surfaceview，texture场景不降"
 	sed -i 's/disableViewOverride="true/disableViewOverride="false/g' $pfd && echo "已关闭disableViewOverride"
 	sed -i 's/inputMethodLowRate="true/inputMethodLowRate="false/g' $pfd && echo "已关闭输入法降帧"
@@ -156,8 +170,16 @@ FUN_ovc(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -i '/\"blacklist\"/,/[\s\S]*\s*\]/d' $pfd && echo "已删除黑名单"
-	sed -i -e '/"timeout": [0-9]*,/d' -e '/"hw_brightness_limit": [0-9]*,/d' -e '/"hw_gray": true,/d' -e '/"hw_gray_threshold": [0-9]*,/d' -e '/"hw_gray_percent": [0-9]*,/d' $pfd && echo "已删除多余内容"
+	echo "备份关键项……"
+	sed -n -e '/"filter_name/i {' -e '/"filter_name/a },' -e '/"filter_name/p' $pfd >$TMPDIR/adfrkey
+	sed -n -e '/"version/i {' -e '/"version/a },' -e '/"version/p' $pfd >>$TMPDIR/adfrkey
+	sed -n -e '/"sub_version/i {' -e '/"sub_version/a },' -e '/"sub_version/p' $pfd >>$TMPDIR/adfrkey
+	sed -n -e '/"touch_idle/i {' -e '/"adfr_enable/a },' -e '/"adfr_enable/p' -e '/"sw_enable/p' -e '/"hw_enable/p' -e '/"touch_idle/p' $pfd >>$TMPDIR/adfrkey
+	sed -n -e '/"cvt/i {' -e '/"cvt/a },' -e '/"cvt/p' $pfd >>$TMPDIR/adfrkey
+	sed -n -e '/"frtc/i {' -e '/"frtc/a }' -e '/"frtc/p' $pfd >>$TMPDIR/adfrkey
+	sed -i -e '1i [' -e '$a ]' $TMPDIR/adfrkey
+	cp -f $TMPDIR/adfrkey $pfd
+	sed -i -e '/"touch_idle"/s/true,/false,/' -e '/"hw_enable"/s/true,/false,/' -e '/"sw_enable"/s/true,/false,/'  -e '/"adfr_enable"/s/true,/false,/' $pfd && echo "禁用 touch_idle, hw, sw, adfr"
 	echo "修改$2完成"
 else echo " ✘ 不存在$2：$1" >&2;fi
 }
@@ -174,21 +196,42 @@ else echo " ✘ 不存在$2：$1" >&2;fi
 }
 chkFUN $src_mdpl "视频播放器帧率控制" FUN_mdpl
 
+FUN_fcl(){
+echo2n
+	pfdDir=$(echo "${1%/*}" | sed -e 's/^\/vendor\//\/system\/vendor\//' -e 's/^\/product\//\/system\/product\//' -e 's/^\/system_ext\//\/system\/system_ext\//')
+	[ -d "$MODPATH$pfdDir" ] || mkdir -p "$MODPATH$pfdDir"
+	cp -rf "$1" "$MODPATH$pfdDir"
+	pfd="$MODPATH$pfdDir/${1##*/}"
+	echo "mount --bind \$MODDIR$pfdDir/${1##*/} $1" >>$pfds
+	echo "－开始修改$2：$1"
+	echo "
+<?xml version=\"1.0\" encoding=\"utf-8\"?>
+
+<extend_features>
+    <app_feature name=\"os.carlink.ocar.xgui\" args=\"boolean:true\" />
+    <app_feature name=\"os.carlink.carkey\" args=\"boolean:true\" />
+    <app_feature name=\"os.carlink.carcontrol\" args=\"boolean:true\" />
+</extend_features>" >$pfd
+	blMv
+	echo -e "修改$2完成"
+}
+chkFUN $src_fcl "Carlink feature 车联特性" FUN_fcl
+
 FUN_stcc(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_[scene_]*103/,/com.tencent.mobileqq_[scene_]*103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ 微信 WhatsApp specificScene"
+	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_\(scene_\)*103/,/com.tencent.mobileqq_\(scene_\)*103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ 微信 WhatsApp specificScene"
 	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "已删除 specificScene 与 /specificScene 区间行"
 	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "已写回腾讯QQ specificScene"
 	sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' $pfd >$TMPDIR/specific && echo "已备份Oplus相机 specific"
 	sed -i '/specific>/,/\/specific>*/d' $pfd && echo "已删除 specific 与 /specific 区间行"
 	sed -i '/\/specificScene/ r specific' $pfd && rm -rf $TMPDIR/specific && echo "已写回Oplus相机 specific"
-sed -i 's/fps=\"[0-9]*/fps=\"0/g' $pfd && echo "已关闭温控锁帧率"
-sed -i 's/cpu=\"\-*[0-9]*/cpu=\"-1/g' $pfd && echo "CPU -1"
-sed -i 's/gpu=\"\-*[0-9]*/gpu=\"-1/g' $pfd && echo "GPU -1"
-sed -i 's/cameraBrightness=\"[0-9]*/cameraBrightness=\"255/g' $pfd && echo "相机亮度 255"
-	sed -i -e 's/restrict=\"[0-9]*/restrict=\"0/g' -e 's/brightness=\"[0-9]*/brightness=\"0/g' -e 's/charge=\"[0-9]*/charge=\"0/g' -e 's/modem=\"[0-9]*/modem=\"0/g' -e 's/disFlashlight=\"[0-9]*/disFlashlight=\"0/g' -e 's/stopCameraVideo=\"[0-9]*/stopCameraVideo=\"0/g' -e 's/disCamera=\"[0-9]*/disCamera=\"0/g' -e 's/disWifiHotSpot=\"[0-9]*/disWifiHotSpot=\"0/g' -e 's/disTorch=\"[0-9]*/disTorch=\"0/g' -e 's/disFrameInsert=\"[0-9]*/disFrameInsert=\"0/g' -e 's/refreshRate=\"[0-9]*/refreshRate=\"0/g' -e 's/disVideoSR=\"[0-9]*/disVideoSR=\"0/g' -e 's/disOSIE=\"[0-9]*/disOSIE=\"0/g' -e 's/disHBMHB=\"[0-9]*/disHBMHB=\"0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB"
+sed -i 's/fps="[0-9]*/fps="0/g' $pfd && echo "已关闭温控锁帧率"
+sed -i 's/cpu="-*[0-9]*/cpu="-1/g' $pfd && echo "CPU -1"
+sed -i 's/gpu="-*[0-9]*/gpu="-1/g' $pfd && echo "GPU -1"
+sed -i 's/cameraBrightness="[0-9]*/cameraBrightness="255/g' $pfd && echo "相机亮度 255"
+	sed -i -e 's/restrict="[0-9]*/restrict="0/g' -e 's/brightness="[0-9]*/brightness="0/g' -e 's/charge="[0-9]*/charge="0/g' -e 's/modem="[0-9]*/modem="0/g' -e 's/disFlashlight="[0-9]*/disFlashlight="0/g' -e 's/stopCameraVideo="[0-9]*/stopCameraVideo="0/g' -e 's/disCamera="[0-9]*/disCamera="0/g' -e 's/disWifiHotSpot="[0-9]*/disWifiHotSpot="0/g' -e 's/disTorch="[0-9]*/disTorch="0/g' -e 's/disFrameInsert="[0-9]*/disFrameInsert="0/g' -e 's/refreshRate="[0-9]*/refreshRate="0/g' -e 's/disVideoSR="[0-9]*/disVideoSR="0/g' -e 's/disOSIE="[0-9]*/disOSIE="0/g' -e 's/disHBMHB="[0-9]*/disHBMHB="0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB"
 	blMv
 	echo "修改$2完成"
 else echo " ✘ 不存在$2：$1" >&2;fi
@@ -301,10 +344,10 @@ FUN_smac(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -i 's/maxNum name="[0-9]*/maxNum name="999/' $pfd && echo "已修改分身应用数量限制为 999"
+	sed -i 's/maxNum name="[0-9]*/maxNum name="2000/' $pfd && echo "已修改分身应用数量限制为 2000";# 2000 for 21th century.
 	echo "－开始添加应用到$2允许名单"
 	for APKN in $APKNs;do multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-		if [[ -z "$(grep "$multiAPKN" $pfd)" ]];then sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到$2允许名单" >&2
+		if [[ -z $(grep "$multiAPKN" $pfd) ]];then sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到$2允许名单" >&2
 		else echo "包名：$APKN 已在$2名单" >&2;fi;done
 	blMv
 	sed -i '1i'"appClonerList=$damCM$pfdDir/${1##*/}" $MODPATH/service.sh
@@ -318,8 +361,7 @@ FUN_blacklistMv(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	for APKN in $blacklistAPKNs;do
-		if [[ -z $(grep "$APKN" $pfd) ]];then sleep 0
+	for APKN in $blacklistAPKNs;do if [[ -z $(grep "$APKN" $pfd) ]];then sleep 0
 		else echo "检索到含有黑名单应用包名：$APKN 的行" >&2
 			sed -i '/'$APKN'/d' $pfd && echo "－已删除↑" >&2;fi;done
 	blMv
@@ -334,7 +376,7 @@ if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
 	for APKN in $APKNs;do darkAPKN="<p\ attr\=\"$APKN\"\/>"
-		if [[ -z "$(grep "$darkAPKN" $pfd)" ]];then sed -i '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "已新添加APP包名：$APKN 到$2" >&2
+		if [[ -z $(grep "$darkAPKN" $pfd) ]];then sed -i '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "已新添加APP包名：$APKN 到$2" >&2
 		else echo "包名：$APKN 已在$2" >&2;fi;done
 	echo "修改$2完成"
 	echo "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常";fi
@@ -357,7 +399,7 @@ FUN_bgApp(){
 if [ -f $1 ];then mountPfd $1
 echo2n
 	echo "－开始修改$2：$1"
-	sed -i '/lock_app_limit/s/value="[0-9]*/value="999/' $pfd && echo "已修改锁定后台数量限制为 999"
+	sed -i '/lock_app_limit/s/value="[0-9]*/value="2000/' $pfd && echo "已修改锁定后台数量限制为 2000"
 	echo "修改$2完成"
 else echo " ✘ 不存在$2：$1" >&2;fi
 }
@@ -376,10 +418,17 @@ chkFUN $src_spea "安全支付的启用应用名单" FUN_spea
 
 # 注释掉多余挂载命令行
 sed -i 's/^mount --bind \$MODDIR\/system\//# mount --bind \$MODDIR\/system\//g' $pfds
-# 清理临时
-# rm -rf $MODPATH/config/dts >/dev/null 2>&1
+
+set_perm_recursive $MODPATH 0 0 755 644
+
+# 安装内置的二进制文件
+MBD=$MODPATH/system/bin
+[ -d $MBD ] || mkdir -p $MBD
+set_perm_recursive $MODBIN 0 0 755 755
+for i in `find $MODBIN/* -prune`;do ln $i $MBD/${i##*/};done
+
+# 清理临时文件
+rm -rf $DTSTMP >/dev/null 2>&1
 
 echo -e "\n\n－模块安装完成\n修改在重启后生效\n	^ω^"
-
-set_perm_recursive $MODPATH 0 0 0755 0644
 

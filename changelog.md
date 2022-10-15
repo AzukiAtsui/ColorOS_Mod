@@ -1,22 +1,15 @@
-### v1.1.6
+### v1.1.7
 #### Changelog
-1. Continue the work of v1.1.5 changelog point 2 ~ 4.
-2. Back to `install_magisk` to disable AVB.
+1. Fix oplus_adfr_config modification.
+2. Try enable Carlink for 'low end device'.
+2. Try enable volume panel blur for 'low end device'.
+3. Install binaries to /system/bin .
+4. More proper lightweight sed shell.
 
 #### 更新日志
-1. 继续v1.1.5更新日志中第2~4点的工作。
-2. 重新回到安装面具来关AVB。
-
-### v1.1.5
-#### Changelog
-1. Update binaries compiled using NDK_r24 aarch64-linux-android31-clang. Thank [affggh](https://github.com/affggh/) and [望月古川](http://www.coolapk.com/u/843974).
-2. Optimize process.
-3. New dynamically update "App cloner" allowed list, Auto/Assosiated lanch recommend list.
-4. Detach blacklist, whitelist and switches.sh from customize.sh for better modifing them and better repeatedly sourcing them. 
-
-#### 更新日志
-1. 更新使用 NDK_r24 aarch64-linux-android31-clang 编译的二进制。感谢 [affggh](https://github.com/affggh/) 和 [望月古川](http://www.coolapk.com/u/843974)。
-2. 优化流程。
-3. 新增动态更新应用分身允许名单、推荐自启/关联启动名单。
-4. 从 customize.sh(安装脚本) 分离出 blacklist(黑名单)、whitelist(白名单) 和 switches.sh(开关控制) 以便修改它们和更容易地重复引用它们。
+1. 修复动态刷新率adfr配置修改。
+2. 尝试为“低端机”启用车联。
+2. 尝试为“低端机”启用音量面板模糊。
+3. 安装内置的二进制文件。
+4. 更轻量合适的sed命令行。
 

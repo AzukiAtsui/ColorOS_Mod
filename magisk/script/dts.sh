@@ -86,14 +86,15 @@ do
 	((j++))
 	val2="${acc[$j]}"
 	# patch1=`grep -l -r -n "$val1" $DTSTMP`
-	for patch1 in `grep -l -r -n "$(echo $val1 | sed 's/ <\.\*>//')" $DTSTMP`;do
+	for patch1 in `grep -l -r -n "$(echo $val1 | sed 's/=.*/=/')" $DTSTMP`;do
 	[ -z $patch1 ] && continue
-	echo -e "\n开始修改${patch1##*/} :\n$(echo $val1 | sed 's/ <\.\*>//')"
-	sed -i "s/${val1}/${val2}/g" $patch1
+	echo -e "\n匹配修改${patch1##*/}的$val1"
+	sed -i "s/$val1/$val2/g" $patch1
 		if [ $? -ne 0 ];then
-			echo "line $(( $j )) failed!"
+			echo "line $j failed!"
+			exit 8
 		else
-			echo "line $(( $j )) succeed! "
+			echo "line $j succeed! "
 		fi
 	done
 	((j++))
@@ -139,7 +140,6 @@ fi
 bk2up(){
 [ -f $bk_dtbo ] && cp -f $bk_dtbo $org_dtbo
 [ -f $bkn_dtbo ] && cp -f $bkn_dtbo $new_dtbo
-# if [[ -z $(find $damCM -type f -iname '$dtbo_nm') ]];then
 if [ ! -f $bk_dtbo ];then
 	echo 未找到当前版本的dtbo，也许是更新系统了？即将提取dtbo并修改。
 	main

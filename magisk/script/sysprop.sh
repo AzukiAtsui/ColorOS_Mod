@@ -16,9 +16,15 @@
 # along with ColorOS_Mod.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-# 欧加设备 国家/地区代码
+[ -z $API ] && API=$(getprop ro.build.version.sdk)
+[ -Z $ABI ] && ABI=$(getprop ro.product.cpu.abi)
+if [ "$ABI" = "x86" ];then ARCH=x86;ABI32=x86;IS64BIT=false
+elif [ "$ABI" = "arm64-v8a" ];then ARCH=arm64;ABI32=armeabi-v7a;IS64BIT=true
+elif [ "$ABI" = "x86_64" ];then ARCH=x64;ABI32=x86;IS64BIT=true
+else ARCH=arm;ABI=armeabi-v7a;ABI32=armeabi-v7a;IS64BIT=false;fi
+
 nvid=`getprop ro.build.oplus_nv_id`
-function chkNvid(){
+chkNvid(){
 case $nvid in
 	10010111) echo CN 中国 China;;
 	00011010) echo TW 中国台湾省 Taiwan;;
@@ -64,7 +70,7 @@ echo "－代号 (Codename) : $CODENAME"
 echo "－项目 (Project Name) : $project_name"
 echo "－地区 (Locale) : `getprop ro.product.locale`"
 echo "－国家/地区 (Nation/Area) : `chkNvid`"
-echo "－版本号（Build number） : `getprop ro.build.display.id`"
+echo "－版本号 (Build number) : `getprop ro.build.display.id`"
 echo "－OTA版本 (OTA Version) : $ota_version"
 echo "－ColorOS 版本 (ColorOS Version) : `getprop ro.build.version.oplusrom`"
 [ -z $rui_version ] || echo "－realmeUI 版本 (realmeUI Version) : $rui_version"
