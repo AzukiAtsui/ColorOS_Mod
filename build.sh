@@ -21,7 +21,7 @@ rootpath=$(cd ~;pwd)
 year=$(date "+%Y")
 
 # 模块包属性
-ver=v1.1.7
+ver=v1.1.8
 dayno=1
 [ "$debug" -eq 1 ] && ver=debug
 versioncode="${year: -2}$(date "+%m%d")$dayno"
@@ -37,19 +37,32 @@ mChg(){
 # [All Changelogs](https://azukiatsui.github.io/ColorOS_Mod/release/changelog/)
 echo "### $ver
 #### Changelog
-1. Fix oplus_adfr_config modification.
-2. Try enable Carlink for 'low end device'.
-2. Try enable volume panel blur for 'low end device'.
-3. Install binaries to /system/bin .
-4. More proper lightweight sed shell.
+1. Fix \`unset switch_dtbo\` for preventing NOT-Snapdragon devices to modify dtbo, just in case boot-loop or BRICK.
+2. Update avb.sh.
+3. Lightweighting and improving functions in customize.sh.
 
 #### 更新日志
-1. 修复动态刷新率adfr配置修改。
-2. 尝试为“低端机”启用车联。
-2. 尝试为“低端机”启用音量面板模糊。
-3. 安装内置的二进制文件。
-4. 更轻量合适的sed命令行。
+1. 修复删除switch_dtbo变量，以阻止非高通设备修改dtbo，防止变砖。
+2. 更新avb.sh。
+3. 轻量化和改进安装脚本的函数。
 " >$new_chg
+}
+
+set_perm() {
+	# chown $2:$3 $1 || return 1
+	chmod $4 $1 || return 1
+	# local CON=$5
+	# [ -z $CON ] && CON=u:object_r:system_file:s0
+	# chcon $CON $1 || return 1
+}
+
+set_perm_recursive() {
+	find $1 -type d 2>/dev/null | while read dir; do
+		set_perm $dir $2 $3 $4 $6
+	done
+	find $1 -type f -o -type l 2>/dev/null | while read file; do
+		set_perm $file $2 $3 $5 $6
+	done
 }
 
 rmTmp(){
@@ -62,7 +75,8 @@ mZip(){
 if [ -d $workdir/magisk ];then
 	pushd $workdir/magisk >/dev/null
 	rmTmp
-	chmod -R 777 *
+	set_perm_recursive $workdir 0 0 755 644
+	set_perm_recursive $workdir/magisk/bin 0 0 755 755
 		sed -i 's/version=.*/version='$ver'/g' module.prop
 		sed -i 's/versioncode=.*/versioncode='$versioncode'/g' module.prop
 		7z a -r $zip_nm * >/dev/null

@@ -116,9 +116,9 @@ mkdtimg create $1 --page_size=4096 $(find $DTSTMP -name "$2.*")
 flashDtbo(){
 	chkSlot
 	dd if=$new_dtbo of=/dev/block/by-name/dtbo$SLOT
+	AVB_flag=3 bash $MODSCRIPT/avb.sh
 	BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 	install_magisk >/dev/null 2>&1
-	# AVB_flag=3 bash $MODSCRIPT/avb.sh ;# cause fingerprint bug in v1.1.4 ~ v1.1.6
 	echo 1 >$dtbo_sign
 	exit 0
 }
@@ -157,9 +157,9 @@ case $(cat $dtbo_sign) in
 		else
 			dd if=$org_dtbo of=/dev/block/by-name/dtbo
 		fi
+		AVB_flag=3 bash $MODSCRIPT/avb.sh
 		BOOTIMAGE="/dev/block/by-name/boot$SLOT"
 		install_magisk >/dev/null 2>&1
-		# AVB_flag=3 bash $MODSCRIPT/avb.sh
 		;;
 	3) bk2up;;
 	*) main;;

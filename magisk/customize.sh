@@ -46,17 +46,14 @@ source $MODCONFIG/blacklist
 source $MODSCRIPT/sysprop.sh
 
 # 打印模块信息
-MODID=`grep_prop id $TMPDIR/module.prop`
-MODNAME=`grep_prop name $TMPDIR/module.prop`
 MODVER=`grep_prop version $TMPDIR/module.prop`
-MODVERCODE=`grep_prop versioncode $TMPDIR/module.prop`
-MODAUTH=`grep_prop author $TMPDIR/module.prop`
+MODVCD=`grep_prop versioncode $TMPDIR/module.prop`
 MODDES=`grep_prop description $TMPDIR/module.prop`
 echo ""
 echo "－** 模块信息 (MODULE INFO) **"
 echo "－名称 (name) : $MODNAME"
 echo "－版本 (version) : $MODVER"
-echo "－版本号 (versioncode) : $MODVERCODE"
+echo "－版本号 (versioncode) : $MODVCD"
 echo "－作者 (author) : $MODAUTH"
 echo "－描述 (description) : $MODDES"
 echo ""
@@ -70,7 +67,7 @@ else abort "有时竟一个 bash 都没有！";fi
 chmod +x $(find $MODBIN)
 export PATH="$MODBIN:$PATH"
 
-damCM=/data/adb/modules/$MODID
+damCM=$NVBASE/modules/$MODID
 if [ -f $damCM/post-fs-data.sh ];then cat $damCM/post-fs-data.sh | grep 'mount --bind' | sed -n 's/^[# ]*mount --bind .* \//umount \//g;p' >$TMPDIR/umount.sh
 	. $TMPDIR/umount.sh 2>/dev/null;fi
 
@@ -88,33 +85,37 @@ mountPfd() {
 	if [ -f "$pfd" ];then echo "mount --bind \$MODDIR$pfdDir/${1##*/} $1" >>$pfds;else abort " ✘ 模块目录下竟然没有需编辑的 $pfd 文件，请联系开发者修复！";fi
 }
 
-apknAdd() {
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
-	for APKN in $APKNs;do sed -i -e '/'$APKN'$/d' -e '$a'$APKN $pfd && echo "已去重添加包名：$APKN 到$2" >&2;done
-	for APKN in $blacklistAPKNs;do sed -i '/'$APKN'$/d' $pfd && echo " ✘ 已从$2删除黑名单应用 包名：$APKN" >&2;done
-	echo "修改$2完成";fi
-if [[ $1 == $src13_awl ]];then sed -i '1i'"bootallow13List=$damCM$pfdDir/${1##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src13_awl;fi
-if [[ $1 == $src_acwl ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${1##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src_acwl;fi
-}
-
 blMv() {
 	sed -i -e 's/[[:space:]]*<\!--.*-->[[:space:]]*//g' -e '/<\!--/,/-->/c'"" $pfd
 	sed -i '/^[[:space:]]*$/d' $pfd
 }
 
-chkFUN() { if [ -z $1 ];then echo "未定义 $2 文件";else $3 "$1" "$2文件";fi;}
+tplFUN() {
+if [ -f $1 ];then mountPfd $1
+echo2n
+	echo "－开始修改$2：$1"
+	$3
+	blMv
+	echo -e "修改$2完成"
+	[ -z "$4" ] || echo -e "$4"
+else echo " ✘ 不存在$2：$1" >&2;fi
+}
+
+ckFUN() {
+if [ -z $1 ];then echo "未定义 $2 文件"
+else local SRC NM FUN PSI
+	SRC="$1";NM="$2文件";FUN=$3;PSI="$4"
+	tplFUN "$SRC" "$NM" $FUN "$PSI";fi
+}
 
 
 echo -e "\n\n######### 开始修改系统文件 #########"
 
 echo2n
-if [[ $(cat /sys/devices/soc0/family) == Snapdragon ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！\n";else unset $switch_dtbo;echo "修改 dtbo 仅支持高通平台设备！";fi
-if [[ $switch_dtbo == TRUE ]];then
-	echo "－开始修改 dtbo镜像"
-	echo -e "－Once dtbo or other critical partitions had been flashed, Android Verified Boot must be disabled just in case RED STATE STUCK.\n    DO DIRECT INSTALL in Magisk25+ app to disable AVB."
-	if [[ `cat $damCM/sign/dtbo` -eq 1 ]];then echo " ✔ 已刷入过修改后的 dtbo";echo 1 >$MODSIGN/dtbo;fi
+if [[ $(cat /sys/devices/soc0/family) == Snapdragon ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！\n";else unset switch_dtbo;echo "修改 dtbo 仅支持高通平台设备！";fi
+if [[ $switch_dtbo == TRUE ]];then echo "－开始修改 dtbo镜像"
+	# Once dtbo or other critical partitions had been flashed, Android Verified Boot must be disabled just in case RED STATE STUCK or BOOT-LOOP.
+	if [[ "`cat $damCM/sign/dtbo`" -eq "1" ]];then echo " ✔ 已刷入过修改后的 dtbo";echo 1 >$MODSIGN/dtbo;fi
 	bash $MODSCRIPT/dts.sh >&2
 	case $? in
 		0) echo -e "大概是修改并刷入成功了\n欲知详情请保存安装日志（通常在右上角）\n请勿删除或移动 $damCM 目录的原版dtbo\n在将来，卸载 ColorOS_Mod 时会刷回原版 dtbo";;
@@ -128,48 +129,27 @@ if [[ $switch_dtbo == TRUE ]];then
 else echo "开关已关闭，跳过修改 dtbo镜像";echo 3 >$MODSIGN/dtbo;fi
 
 FUN_fccas() {
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "未知错误！请联系开发者修复！"
 	sed -i -e '/enable_fp_blind_unlock/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.enable_fp_blind_unlock"/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
 	sed -i -e '/prevented_screen_burn/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.prevented_screen_burn"/>' $pfd && echo "<!-- indicate if the device is prevented screen burn -->"
 	sed -i '/disable_volume_blur/d' $pfd && echo "去除禁用音量面板模糊"
-	blMv
-	echo "修改$2完成"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_fccas "ColorOS 13 系统设置延伸特性" FUN_fccas
+ckFUN $src_fccas "ColorOS 13 系统设置延伸特性" FUN_fccas
 
 FUN_rpref(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i '/move_dc_to_develop/d' $pfd && echo "已删除移动DC调光到开发者选项设置"
-	blMv
-	echo -e "修改$2完成"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_rpref " realmeUI 系统设置延伸特性" FUN_rpref
+ckFUN $src_rpref " realmeUI 系统设置延伸特性" FUN_rpref
 
 FUN_rcc(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i 's/rateId="[0-9]-[0-9]-[0-9]-[0-9]/rateId="3-1-2-3/g' $pfd && echo "已全局改刷新率模式为 3-1-2-3"
 	sed -i 's/enableRateOverride="true/enableRateOverride="false/g' $pfd && echo "surfaceview，texture场景不降"
 	sed -i 's/disableViewOverride="true/disableViewOverride="false/g' $pfd && echo "已关闭disableViewOverride"
 	sed -i 's/inputMethodLowRate="true/inputMethodLowRate="false/g' $pfd && echo "已关闭输入法降帧"
-	blMv
-	echo -e "修改$2完成\n注意：系统设置刷新率仍然生效"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_rrc "屏幕刷新率重点应用名单" FUN_rcc
+ckFUN $src_rrc "屏幕刷新率重点应用名单" FUN_rcc "注意：系统设置刷新率仍然生效"
 
 FUN_ovc(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	echo "备份关键项……"
 	sed -n -e '/"filter_name/i {' -e '/"filter_name/a },' -e '/"filter_name/p' $pfd >$TMPDIR/adfrkey
 	sed -n -e '/"version/i {' -e '/"version/a },' -e '/"version/p' $pfd >>$TMPDIR/adfrkey
@@ -180,21 +160,13 @@ echo2n
 	sed -i -e '1i [' -e '$a ]' $TMPDIR/adfrkey
 	cp -f $TMPDIR/adfrkey $pfd
 	sed -i -e '/"touch_idle"/s/true,/false,/' -e '/"hw_enable"/s/true,/false,/' -e '/"sw_enable"/s/true,/false,/'  -e '/"adfr_enable"/s/true,/false,/' $pfd && echo "禁用 touch_idle, hw, sw, adfr"
-	echo "修改$2完成"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-[[ $product_brand == realme ]] && chkFUN $src_ovc "动态刷新率(adfr) " FUN_ovc
+[[ $product_brand == realme ]] && ckFUN $src_ovc "动态刷新率(adfr) " FUN_ovc
 
 FUN_mdpl(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i -e '/<fps>/d' -e '/<vsync>/d' $pfd && echo "已删除锁帧、垂直同步设置"
-	blMv
-	echo -e "修改$2完成\n设置120hz时，播放视频可120hz"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_mdpl "视频播放器帧率控制" FUN_mdpl
+ckFUN $src_mdpl "视频播放器帧率控制" FUN_mdpl "设置120hz时，播放视频可120hz"
 
 FUN_fcl(){
 echo2n
@@ -204,8 +176,7 @@ echo2n
 	pfd="$MODPATH$pfdDir/${1##*/}"
 	echo "mount --bind \$MODDIR$pfdDir/${1##*/} $1" >>$pfds
 	echo "－开始修改$2：$1"
-	echo "
-<?xml version=\"1.0\" encoding=\"utf-8\"?>
+	echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 
 <extend_features>
     <app_feature name=\"os.carlink.ocar.xgui\" args=\"boolean:true\" />
@@ -215,12 +186,9 @@ echo2n
 	blMv
 	echo -e "修改$2完成"
 }
-chkFUN $src_fcl "Carlink feature 车联特性" FUN_fcl
+FUN_fcl $src_fcl "Carlink feature 车联特性"
 
 FUN_stcc(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_\(scene_\)*103/,/com.tencent.mobileqq_\(scene_\)*103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ 微信 WhatsApp specificScene"
 	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "已删除 specificScene 与 /specificScene 区间行"
 	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "已写回腾讯QQ specificScene"
@@ -232,18 +200,12 @@ sed -i 's/cpu="-*[0-9]*/cpu="-1/g' $pfd && echo "CPU -1"
 sed -i 's/gpu="-*[0-9]*/gpu="-1/g' $pfd && echo "GPU -1"
 sed -i 's/cameraBrightness="[0-9]*/cameraBrightness="255/g' $pfd && echo "相机亮度 255"
 	sed -i -e 's/restrict="[0-9]*/restrict="0/g' -e 's/brightness="[0-9]*/brightness="0/g' -e 's/charge="[0-9]*/charge="0/g' -e 's/modem="[0-9]*/modem="0/g' -e 's/disFlashlight="[0-9]*/disFlashlight="0/g' -e 's/stopCameraVideo="[0-9]*/stopCameraVideo="0/g' -e 's/disCamera="[0-9]*/disCamera="0/g' -e 's/disWifiHotSpot="[0-9]*/disWifiHotSpot="0/g' -e 's/disTorch="[0-9]*/disTorch="0/g' -e 's/disFrameInsert="[0-9]*/disFrameInsert="0/g' -e 's/refreshRate="[0-9]*/refreshRate="0/g' -e 's/disVideoSR="[0-9]*/disVideoSR="0/g' -e 's/disOSIE="[0-9]*/disOSIE="0/g' -e 's/disHBMHB="[0-9]*/disHBMHB="0/g' $pfd && echo "已关闭部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB"
-	blMv
-	echo "修改$2完成"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_stcc "系统高温控制配置" FUN_stcc
+ckFUN $src_stcc "系统高温控制配置" FUN_stcc
 
-chkFUN $src_stcc_gt "realme GT模式高温控制器" FUN_stcc
+ckFUN $src_stcc_gt "realme GT模式高温控制器" FUN_stcc
 
 FUN_shtp(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "已禁用$2"
 	sed -i '/HighTemperatureShutdownSwitch>/s/true/false/g' $pfd && echo "已禁用高温关机"
 	sed -i '/HighTemperatureFirstStepSwitch>/s/true/false/g' $pfd && echo "已禁用高温第一步骤"
@@ -258,17 +220,11 @@ echo2n
 	sed -i '/ToleranceSecondStepOut>/s/>[0-9]*</>600</g' $pfd && echo "已修改ToleranceSecondStepOut为600"
 	sed -i '/ToleranceStart>/s/>[0-9]*</>540</g' $pfd && echo "已修改ToleranceStart为540"
 	sed -i '/ToleranceStop>/s/>[0-9]*</>520</g' $pfd && echo "已修改ToleranceStop为520"
-	blMv
-	echo "修改$2完成"
-	echo -e "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_shtp "高温保护" FUN_shtp
+ckFUN $src_shtp "高温保护" FUN_shtp "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
+
 
 FUN_stc(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i '/is_upload_dcs>/s/1/0/g' $pfd && echo "已关闭上传dcs"
 	sed -i '/is_upload_log>/s/1/0/g' $pfd && echo "已关闭上传log"
 	sed -i '/is_upload_errlog>/s/1/0/g' $pfd && echo "已关闭上传错误log"
@@ -282,24 +238,18 @@ echo2n
 	sed -i '/less_heat_threshold>/s/>[0-9]*</>560</g' $pfd && echo "已修改less_heat_threshold为560"
 	sed -i '/preheat_threshold>/s/>[0-9]*</>540</g' $pfd && echo "已修改preheat_threshold为540"
 	sed -i '/preheat_dex_oat_threshold>/s/>[0-9]*</>520</g' $pfd && echo "已修改preheat_dex_oat_threshold为520"
-	blMv
-	echo "修改$2完成"
-	echo -e "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_stc "高热配置" FUN_stc
+ckFUN $src_stc "高热配置" FUN_stc "请避免手机长时间处于高温状态（约44+℃）\n－高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
 
 echo2n
-if [ -d $src_horae ];then
-echo "－检测到存在加密温控目录，尝试模块替换为空"
+if [ -d $src_horae ];then echo "－检测到存在加密温控目录，尝试模块替换为空"
 REPLACE="
 /system/system_ext/etc/horae
 "
 else echo "未定义 加密温控 目录";fi
 
 echo2n
-if [[ $switch_thermal == TRUE ]];then
-echo "－开始修改修改温控节点温度阈值"
+if [[ $switch_thermal == TRUE ]];then echo "－开始修改修改温控节点温度阈值"
 for thermalTemp in `find /sys/devices/virtual/thermal/ -iname "*temp*" -type f`;do wint=`cat $thermalTemp`
 	[[ -z $wint ]] && continue
 	echo "`realpath $thermalTemp` 当前参数：$wint" >&2
@@ -323,15 +273,9 @@ else echo " ✘ 开关已关闭，跳过修改温度阈值";fi
 # find /system /vendor /product /odm /system_ext -type f -iname "*thermal*" -exec ls -s -h {} \; 2>/dev/null | sed '/hardware/d' ; # swap to 0, may cause STUCK.
 
 FUN_apn() {
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i '/read_only/s/true/false/g' $pfd && echo "已关闭自带接入点修改限制"
-	blMv
-	echo "修改$2完成"
-else echo " ✘ 不存在$2：$1 " >&2;fi
 }
-chkFUN $src_apn "自带APN接入点配置" FUN_apn
+ckFUN $src_apn "自带APN接入点配置" FUN_apn
 
 echo2n
 if [ ! -z "$list_hybridswap" ];then echo "－尝试在安装有面具的情况下开启内存拓展"
@@ -341,80 +285,56 @@ if [ ! -z "$list_hybridswap" ];then echo "－尝试在安装有面具的情况�
 else echo "跳过了激活内存拓展";echo 3 >$MODSIGN/hybridswap;fi
 
 FUN_smac(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i 's/maxNum name="[0-9]*/maxNum name="2000/' $pfd && echo "已修改分身应用数量限制为 2000";# 2000 for 21th century.
 	echo "－开始添加应用到$2允许名单"
 	for APKN in $APKNs;do multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-		if [[ -z $(grep "$multiAPKN" $pfd) ]];then sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到$2允许名单" >&2
+		if [[ -z "$(grep "$multiAPKN" $pfd)" ]];then sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到$2允许名单" >&2
 		else echo "包名：$APKN 已在$2名单" >&2;fi;done
-	blMv
-	sed -i '1i'"appClonerList=$damCM$pfdDir/${1##*/}" $MODPATH/service.sh
-	echo "修改$2完成";fi
+	sed -i '1i'"appClonerList=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh
 }
-chkFUN $src_smac "应用分身配置（App cloner config）" FUN_smac
+ckFUN $src_smac "应用分身配置（App cloner config）" FUN_smac
 
 echo -e "\n\n\n\n######### 以下编辑 /data/ 目录内文件 #########"
 
 FUN_blacklistMv(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
-	for APKN in $blacklistAPKNs;do if [[ -z $(grep "$APKN" $pfd) ]];then sleep 0
+	for APKN in $blacklistAPKNs;do if [[ -z "$(grep "$APKN" $pfd)" ]];then sleep 0
 		else echo "检索到含有黑名单应用包名：$APKN 的行" >&2
 			sed -i '/'$APKN'/d' $pfd && echo "－已删除↑" >&2;fi;done
-	blMv
-	echo "修改$2完成";fi
 }
-chkFUN $src_blacklistMv "启动管理" FUN_blacklistMv
+ckFUN $src_blacklistMv "启动管理" FUN_blacklistMv
 
-chkFUN $src_blacklistMv3c "启动V3配置列表" FUN_blacklistMv
+ckFUN $src_blacklistMv3c "启动V3配置列表" FUN_blacklistMv
 
 FUN_sdmtam(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	for APKN in $APKNs;do darkAPKN="<p\ attr\=\"$APKN\"\/>"
-		if [[ -z $(grep "$darkAPKN" $pfd) ]];then sed -i '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "已新添加APP包名：$APKN 到$2" >&2
+		if [[ -z "$(grep "$darkAPKN" $pfd)" ]];then sed -i '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "已新添加APP包名：$APKN 到$2" >&2
 		else echo "包名：$APKN 已在$2" >&2;fi;done
-	echo "修改$2完成"
-	echo "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常";fi
 }
-chkFUN $src_sdmtam "暗色模式第三方应用管理" FUN_sdmtam
+ckFUN $src_sdmtam "暗色模式第三方应用管理" FUN_sdmtam "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常"
 
-chkFUN $src_bootwhitelist "ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单" apknAdd
+apknAdd() {
+	for APKN in $APKNs;do sed -i -e '/'$APKN'$/d' -e '$a'$APKN $pfd && echo "已去重添加包名：$APKN 到$2" >&2;done
+	for APKN in $blacklistAPKNs;do sed -i '/'$APKN'$/d' $pfd && echo " ✘ 已从$2删除黑名单应用 包名：$APKN" >&2;done
+if [[ $SRC == $src13_awl ]];then sed -i '1i'"bootallow13List=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src13_awl;fi
+if [[ $SRC == $src_acwl ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src_acwl;fi
+}
+ckFUN $src_bootwhitelist "ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单" apknAdd
 
-chkFUN $src_acwl "关联启动白名单" apknAdd
+ckFUN $src_acwl "关联启动白名单" apknAdd
 
-if [ -z $src12_bootallow ];then echo2n
-echo -e "未定义自启动允许文件。\n可能的原因分别有：①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
-else apknAdd $src12_bootallow "ColorOS 12 自启动允许";fi
+ckFUN  $src12_bootallow "ColorOS 12 自启动允许" apknAdd "未定义自启动允许文件。\n可能的原因分别有：①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
 
-if [ -z $src13_awl ];then echo2n
-echo -e "未定义ColorOS 13 自启动白名单文件。\n可能的原因分别有：①注释了定义变量，②安卓12 设备"
-else apknAdd $src13_awl "ColorOS 13 自启动白名单";fi
+ckFUN  $src13_awl "ColorOS 13 自启动白名单" apknAdd "未定义自启动允许文件。\n可能的原因分别有：①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
 
 FUN_bgApp(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i '/lock_app_limit/s/value="[0-9]*/value="2000/' $pfd && echo "已修改锁定后台数量限制为 2000"
-	echo "修改$2完成"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_bgApp "欧加桌面 (Oplus launcher) 配置" FUN_bgApp
+ckFUN $src_bgApp "欧加桌面 (Oplus launcher) 配置" FUN_bgApp
 
 FUN_spea(){
-if [ -f $1 ];then mountPfd $1
-echo2n
-	echo "－开始修改$2：$1"
 	sed -i 's/protectapp.*protectapp>/protectapp \/>/g' $pfd && echo "已清空<protectapp />标签"
-	echo "修改$2完成"
-	echo "请自行注意网络、ROOT权限应用等环境的安全性！谨防上当受骗！"
-else echo " ✘ 不存在$2：$1" >&2;fi
 }
-chkFUN $src_spea "安全支付的启用应用名单" FUN_spea
+ckFUN $src_spea "安全支付的启用应用名单" FUN_spea "请自行注意网络、ROOT权限应用等环境的安全性！谨防上当受骗！"
 
 # 注释掉多余挂载命令行
 sed -i 's/^mount --bind \$MODDIR\/system\//# mount --bind \$MODDIR\/system\//g' $pfds
@@ -428,6 +348,8 @@ set_perm_recursive $MODBIN 0 0 755 755
 for i in `find $MODBIN/* -prune`;do ln $i $MBD/${i##*/};done
 
 # 清理临时文件
+MODDIR=$damCM
+grep_prop DTSTMP $MODSCRIPT/dts.sh
 rm -rf $DTSTMP >/dev/null 2>&1
 
 echo -e "\n\n－模块安装完成\n修改在重启后生效\n	^ω^"
