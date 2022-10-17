@@ -68,11 +68,11 @@ src_bootwhitelist=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -typ
 src_acwl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "associate_white_list.txt"`
 
 # 自启动允许 ColorOS 12
-if [[ $API -lt 33 ]];then
+if [[ "$API" -lt "33" ]];then
 src12_bootallow=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootallow.txt"`
 sleep 0;fi
 # Android 13 版本
-if [[ $API -eq 33 ]];then
+if [[ "$API" -eq "33" ]];then
 src13_awl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "autostart_white_list.txt"`
 sleep 0;fi
 

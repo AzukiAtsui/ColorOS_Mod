@@ -18,13 +18,13 @@
 
 SKIPUNZIP=1
 $BOOTMODE || abort "ColorOS_Mod cannot be installed in recovery."
-[ $ARCH == "arm64" ] || abort "ColorOS_Mod ONLY support arm64 platform."
+[[ "$ARCH" == "arm64" ]] || abort "ColorOS_Mod ONLY support arm64 platform."
 nvid=`getprop ro.build.oplus_nv_id`
-[ -z $nvid ] && abort "当前系统不是ColorOS 或者 realmeUI ！"
+[ -z "$nvid" ] && abort "当前系统不是ColorOS 或者 realmeUI ！"
 # 各安卓平台版本所支持的 API 级别见 [Android 开发者指南](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels) 
-if [ $API -le 30 ];then abort "不支持Android 11 及以下。仅对Android 12 ~ 13 的ColorOS 和 realmeUI 生效"
-elif [ $API -lt 33 ];then echo " 你好，安卓12 用户。 ❛‿˂̵✧"
-elif [ $API -eq 33 ];then echo " 你好，安卓13 用户。 (＾Ｕ＾)ノ~";fi
+if [ "$API" -le "30" ];then abort "不支持Android 11 及以下。仅对Android 12 ~ 13 的ColorOS 和 realmeUI 生效"
+elif [ "$API" -lt "33" ];then echo " 你好，安卓12 用户。 ❛‿˂̵✧"
+elif [ "$API" -eq "33" ];then echo " 你好，安卓13 用户。 (＾Ｕ＾)ノ~";fi
 unzip -o "$ZIPFILE" -x 'META-INF/*' customize.sh -d $MODPATH >&2
 
 MODBIN=$MODPATH/bin
@@ -102,18 +102,19 @@ else echo " ✘ 不存在$2：$1" >&2;fi
 }
 
 ckFUN() {
-if [ -z $1 ];then echo "未定义 $2 文件"
-else local SRC NM FUN PSI
-	SRC="$1";NM="$2文件";FUN=$3;PSI="$4"
-	tplFUN "$SRC" "$NM" $FUN "$PSI";fi
+local SRC NM FUN PSI MC
+	SRC="$1";NM="$2文件";FUN=$3;PSI="$4";MC="$5"
+if [ -z "$SRC" ];then echo "未定义 $MN"
+	[ -z "$MC" ] || echo "可能的原因分别有：$MC"
+else tplFUN "$SRC" "$NM" $FUN "$PSI";fi
 }
 
 
 echo -e "\n\n######### 开始修改系统文件 #########"
 
 echo2n
-if [[ $(cat /sys/devices/soc0/family) == Snapdragon ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！\n";else unset switch_dtbo;echo "修改 dtbo 仅支持高通平台设备！";fi
-if [[ $switch_dtbo == TRUE ]];then echo "－开始修改 dtbo镜像"
+if [[ "$(cat /sys/devices/soc0/family)" == "Snapdragon" ]];then echo -e "\n修改 dtbo 支持高通平台设备！但很不稳定！\n";else unset switch_dtbo;echo "修改 dtbo 仅支持高通平台设备！";fi
+if [[ "$switch_dtbo" == "TRUE" ]];then echo "－开始修改 dtbo镜像"
 	# Once dtbo or other critical partitions had been flashed, Android Verified Boot must be disabled just in case RED STATE STUCK or BOOT-LOOP.
 	if [[ "`cat $damCM/sign/dtbo`" -eq "1" ]];then echo " ✔ 已刷入过修改后的 dtbo";echo 1 >$MODSIGN/dtbo;fi
 	bash $MODSCRIPT/dts.sh >&2
@@ -161,7 +162,7 @@ FUN_ovc(){
 	cp -f $TMPDIR/adfrkey $pfd
 	sed -i -e '/"touch_idle"/s/true,/false,/' -e '/"hw_enable"/s/true,/false,/' -e '/"sw_enable"/s/true,/false,/'  -e '/"adfr_enable"/s/true,/false,/' $pfd && echo "禁用 touch_idle, hw, sw, adfr"
 }
-[[ $product_brand == realme ]] && ckFUN $src_ovc "动态刷新率(adfr) " FUN_ovc
+[[ "$product_brand" == "realme" ]] && ckFUN $src_ovc "动态刷新率(adfr) " FUN_ovc
 
 FUN_mdpl(){
 	sed -i -e '/<fps>/d' -e '/<vsync>/d' $pfd && echo "已删除锁帧、垂直同步设置"
@@ -249,9 +250,9 @@ REPLACE="
 else echo "未定义 加密温控 目录";fi
 
 echo2n
-if [[ $switch_thermal == TRUE ]];then echo "－开始修改修改温控节点温度阈值"
+if [[ "$switch_thermal" == "TRUE" ]];then echo "－开始修改修改温控节点温度阈值"
 for thermalTemp in `find /sys/devices/virtual/thermal/ -iname "*temp*" -type f`;do wint=`cat $thermalTemp`
-	[[ -z $wint ]] && continue
+	[[ -z "$wint" ]] && continue
 	echo "`realpath $thermalTemp` 当前参数：$wint" >&2
 	alias echoTt=echo "改善参数：`cat $pfd` 到`realpath $thermalTemp`"
 [[ $wint -lt 40000 || $wint -ge 55000 ]] && echo " ✘ 跳过修改" && continue
@@ -315,16 +316,16 @@ ckFUN $src_sdmtam "暗色模式第三方应用管理" FUN_sdmtam "“三方应�
 apknAdd() {
 	for APKN in $APKNs;do sed -i -e '/'$APKN'$/d' -e '$a'$APKN $pfd && echo "已去重添加包名：$APKN 到$2" >&2;done
 	for APKN in $blacklistAPKNs;do sed -i '/'$APKN'$/d' $pfd && echo " ✘ 已从$2删除黑名单应用 包名：$APKN" >&2;done
-if [[ $SRC == $src13_awl ]];then sed -i '1i'"bootallow13List=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src13_awl;fi
-if [[ $SRC == $src_acwl ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src_acwl;fi
+if [[ "$SRC" == "$src13_awl" ]];then sed -i '1i'"bootallow13List=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src13_awl;fi
+if [[ "$SRC" == "$src_acwl" ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src_acwl;fi
 }
 ckFUN $src_bootwhitelist "ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单" apknAdd
 
 ckFUN $src_acwl "关联启动白名单" apknAdd
 
-ckFUN  $src12_bootallow "ColorOS 12 自启动允许" apknAdd "未定义自启动允许文件。\n可能的原因分别有：①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
+ckFUN  $src12_bootallow "ColorOS 12 自启动允许" apknAdd "" "①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
 
-ckFUN  $src13_awl "ColorOS 13 自启动白名单" apknAdd "未定义自启动允许文件。\n可能的原因分别有：①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
+ckFUN  $src13_awl "ColorOS 13 自启动白名单" apknAdd "" "①注释了定义变量，②安卓12 设备，不存在bootallow.txt"
 
 FUN_bgApp(){
 	sed -i '/lock_app_limit/s/value="[0-9]*/value="2000/' $pfd && echo "已修改锁定后台数量限制为 2000"
@@ -348,8 +349,8 @@ set_perm_recursive $MODBIN 0 0 755 755
 for i in `find $MODBIN/* -prune`;do ln $i $MBD/${i##*/};done
 
 # 清理临时文件
-MODDIR=$damCM
-grep_prop DTSTMP $MODSCRIPT/dts.sh
+MODDIR=$MODPATH
+DTSTMP=`grep_prop DTSTMP $MODSCRIPT/dts.sh`
 rm -rf $DTSTMP >/dev/null 2>&1
 
 echo -e "\n\n－模块安装完成\n修改在重启后生效\n	^ω^"

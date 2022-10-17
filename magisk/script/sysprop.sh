@@ -17,7 +17,7 @@
 #
 
 [ -z $API ] && API=$(getprop ro.build.version.sdk)
-[ -Z $ABI ] && ABI=$(getprop ro.product.cpu.abi)
+[ -z "$ABI" ] && ABI=$(getprop ro.product.cpu.abi)
 if [ "$ABI" = "x86" ];then ARCH=x86;ABI32=x86;IS64BIT=false
 elif [ "$ABI" = "arm64-v8a" ];then ARCH=arm64;ABI32=armeabi-v7a;IS64BIT=true
 elif [ "$ABI" = "x86_64" ];then ARCH=x64;ABI32=x86;IS64BIT=true
