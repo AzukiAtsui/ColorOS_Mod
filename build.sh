@@ -25,7 +25,8 @@ ver=v1.1.8
 dayno=2
 [ "$debug" -eq 1 ] && ver=debug
 versioncode="${year: -2}$(date "+%m%d")$dayno"
-zip_nm=ColorOS_Mod-$ver-$versioncode.zip
+tagname=$ver-$versioncode
+zip_nm=ColorOS_Mod-$tagname.zip
 
 # upd=1
 new_json=$workdir/main.json
@@ -96,7 +97,7 @@ mJson(){
 echo "{
 	\"version\": \"$ver\",
 	\"versionCode\": $versioncode,
-	\"zipUrl\": \"https://github.com/AzukiAtsui/ColorOS_Mod/releases/download/$versioncode/$zip_nm\",
+	\"zipUrl\": \"https://github.com/AzukiAtsui/ColorOS_Mod/releases/download/$tagname/$zip_nm\",
 	\"changelog\": \"https://github.com/AzukiAtsui/ColorOS_Mod/raw/main/changelog.md\"
 }" >$new_json
 }
@@ -110,20 +111,20 @@ pJson(){
 	mv -f $new_json $rootpath/$io_release/main.json
 	cd $rootpath/AzukiAtsui.github.io
 	git add .
-	git commit -m "ColorOS_Mod $ver"
+	git commit -m "ColorOS_Mod $ver($versioncode)"
 	git push -u origin master
 }
 
 pvTag(){
 	cd $workdir
 	git add .
-	git commit -m "$ver"
+	git commit -m "$ver($versioncode)"
 	git push -u origin main
 	last_commit=$(git log --pretty=format:"%h" | head -1  | awk '{print $1}')
-	git tag -d "$versioncode"
-	git push origin :refs/tags/$versioncode
-	git tag -a "$versioncode" $last_commit -m "$ver"
-	git push origin $versioncode
+	git tag -d "$tagname"
+	git push origin :refs/tags/$tagname
+	git tag -a "$tagname" $last_commit -m ""
+	git push origin "$tagname"
 }
 
 main(){
