@@ -62,7 +62,7 @@ echo "{
 	\"version\": \"$ver\",
 	\"versionCode\": $versioncode,
 	\"zipUrl\": \"https://github.com/AzukiAtsui/ColorOS_Mod/releases/download/$tagname/$zip_nm\",
-	\"changelog\": \"https://github.com/AzukiAtsui/ColorOS_Mod/raw/main/changelog.md\"
+	\"changelog\": \"https://github.com/AzukiAtsui/ColorOS_Mod/raw/dev/changelog.md\"
 }" >$new_json
 sed -i "1c ### _$ver$([ "$dayno" -gt 1 ] && echo "($dayno)")_  by   AzukiAtsui   $year-$(date "+%m-%d")" $new_chg
 }
@@ -77,14 +77,14 @@ pJson(){
 	cd $rootpath/AzukiAtsui.github.io
 	git add .
 	git commit -m "ColorOS_Mod $ver($versioncode)"
-	git push -u origin master
+	git push -u origin main
 }
 
 pvTag(){
 	cd $workdir
 	git add .
 	git commit -m "$ver($versioncode)"
-	git push -u origin main
+	git push -u origin dev
 	last_commit=$(git log --pretty=format:"%h" | head -1  | awk '{print $1}')
 		# delete old same-name tag
 		git tag -d "$tagname"
