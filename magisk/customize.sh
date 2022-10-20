@@ -106,7 +106,8 @@ else echo " ✘ 不存在$2：$1" >&2;fi
 ckFUN() {
 local SRC NM FUN PSI MC
 	SRC="$1";NM="$2文件";FUN=$3;PSI="$4";MC="$5"
-if [ -z "$SRC" ];then echo "未定义 $MN"
+if [ -z "$SRC" ];then
+	echo "未定义 $MN"
 	[ -z "$MC" ] || echo "可能的原因分别有：$MC"
 else
 	tplFUN "$SRC" "$NM" $FUN "$PSI"
@@ -121,9 +122,9 @@ if [[ "$(cat /sys/devices/soc0/family)" == "Snapdragon" ]];then echo -e "\n修�
 if [[ "$switch_dtbo" == "TRUE" ]];then echo "－开始修改 dtbo镜像"
 	# Once dtbo or other critical partitions had been flashed, Android Verified Boot must be disabled just in case RED STATE STUCK or BOOT-LOOP.
 	if [[ "`cat $damCM/sign/dtbo`" -eq "1" ]];then echo " ✔ 已刷入过修改后的 dtbo";echo 1 >$MODSIGN/dtbo;fi
-	bash $MODSCRIPT/dts.sh >&2
+	bash $MODSCRIPT/dts.sh
 	case $? in
-		0) echo -e "大概是修改并刷入成功了\n欲知详情请保存安装日志（通常在右上角）\n请勿删除或移动 $damCM 目录的原版dtbo\n在将来，卸载 ColorOS_Mod 时会刷回原版 dtbo";;
+		0) echo -e "大概是修改并刷入成功了\n请勿删除或移动 $damCM 目录的原版dtbo\n在将来，卸载 ColorOS_Mod 时会刷回原版 dtbo";;
 		14) echo "无可用的dts配置文件";;
 		13) echo "无可用的dtc二进制文件";;
 		12) echo "无可用的mkdtimg二进制文件";;
@@ -176,23 +177,18 @@ ckFUN $src_mdpl "视频播放器帧率控制" FUN_mdpl "设置120hz时，播放�
 
 FUN_fcl(){
 echo2n
-	pfdDir=$(echo "${1%/*}" | sed -e 's/^\/vendor\//\/system\/vendor\//' -e 's/^\/product\//\/system\/product\//' -e 's/^\/system_ext\//\/system\/system_ext\//')
-	[ -d "$MODPATH$pfdDir" ] || mkdir -p "$MODPATH$pfdDir"
-	cp -rf "$1" "$MODPATH$pfdDir"
-	pfd="$MODPATH$pfdDir/${1##*/}"
-	echo "mount --bind \$MODDIR$pfdDir/${1##*/} $1" >>$pfds
+	[ -d "$MODPATH${1%/*}" ] || mkdir -p "$MODPATH${1%/*}"
+	echo "mount --bind \$MODDIR$1 $1" >>$pfds
 	echo "－开始修改$2：$1"
 	echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-
 <extend_features>
-    <app_feature name=\"os.carlink.ocar.xgui\" args=\"boolean:true\" />
-    <app_feature name=\"os.carlink.carkey\" args=\"boolean:true\" />
-    <app_feature name=\"os.carlink.carcontrol\" args=\"boolean:true\" />
-</extend_features>" >$pfd
-	blMv
+<app_feature name=\"os.carlink.ocar.xgui\" args=\"boolean:true\" />
+<app_feature name=\"os.carlink.carkey\" args=\"boolean:true\" />
+<app_feature name=\"os.carlink.carcontrol\" args=\"boolean:true\" />
+</extend_features>" >$MODPATH$1
 	echo -e "修改$2完成"
 }
-FUN_fcl $src_fcl "Carlink feature 车联特性"
+FUN_fcl $src_fcl "Carlink feature 车联特性文件"
 
 FUN_stcc(){
 	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_\(scene_\)*103/,/com.tencent.mobileqq_\(scene_\)*103/p' $pfd >$TMPDIR/specificScene && echo "已备份腾讯QQ 微信 WhatsApp specificScene"
@@ -296,7 +292,7 @@ FUN_smac(){
 	for APKN in $APKNs;do multiAPKN="<item\ name\=\"$APKN\"\ \/>"
 		if [[ -z "$(grep "$multiAPKN" $pfd)" ]];then sed -i '/<allowed>/a'"$multiAPKN" $pfd && echo "已新添加App包名：$APKN 到$2允许名单" >&2
 		else echo "包名：$APKN 已在$2名单" >&2;fi;done
-	sed -i '1i'"appClonerList=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh
+	sed -i '1i'"appClonerList=$damCM$pfdDir/${SRC##*/}" $pfds
 }
 ckFUN $src_smac "应用分身配置（App cloner config）" FUN_smac
 
@@ -321,8 +317,8 @@ ckFUN $src_sdmtam "暗色模式第三方应用管理" FUN_sdmtam "“三方应�
 apknAdd() {
 	for APKN in $APKNs;do sed -i -e '/'$APKN'$/d' -e '$a'$APKN $pfd && echo "已去重添加包名：$APKN 到$2" >&2;done
 	for APKN in $blacklistAPKNs;do sed -i '/'$APKN'$/d' $pfd && echo " ✘ 已从$2删除黑名单应用 包名：$APKN" >&2;done
-if [[ "$SRC" == "$src13_awl" ]];then sed -i '1i'"bootallow13List=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src13_awl;fi
-if [[ "$SRC" == "$src_acwl" ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${SRC##*/}" $MODPATH/service.sh;echo 1 >$MODSIGN/src_acwl;fi
+if [[ "$SRC" == "$src13_awl" ]];then sed -i '1i'"bootallow13List=$damCM$pfdDir/${SRC##*/}" $pfds;echo 1 >$MODSIGN/src13_awl;fi
+if [[ "$SRC" == "$src_acwl" ]];then sed -i '1i'"associatedList=$damCM$pfdDir/${SRC##*/}" $pfds;echo 1 >$MODSIGN/src_acwl;fi
 }
 ckFUN $src_bootwhitelist "ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单" apknAdd
 
@@ -354,8 +350,7 @@ set_perm_recursive $MODBIN 0 0 755 755
 for i in `find $MODBIN/* -prune`;do ln $i $MBD/${i##*/};done
 
 # 清理临时文件
-MODDIR=$MODPATH
-DTSTMP=`grep_prop DTSTMP $MODSCRIPT/dts.sh`
+DTSTMP=$MODPATH/dts
 rm -rf $DTSTMP >/dev/null 2>&1
 
 end=`date +%s`

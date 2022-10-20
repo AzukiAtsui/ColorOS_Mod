@@ -32,13 +32,3 @@ resetprop ro.boot.flash.locked 1
 # resetprop ro.boot.vbmeta.device_state locked
 resetprop ro.boot.verifiedbootstate green
 
-APKNs=$(pm list packages -3 | sed 's/.*://')
-source $MODDIR/blacklist
-
-for APKN in $APKNs;do multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-	[[ -f $appClonerList ]] && if [[ -z "$(grep "$multiAPKN" $appClonerList)" ]];then
-		# Add new-installed third party app package name to the list.
-		sed -i '/<allowed>/a'"$multiAPKN" $appClonerList;fi
-	[[ -f $bootallow13List && $(cat $MODSIGN/src13_awl) == 1 ]] && if [[ -z "$(grep "$APKN" $bootallow13List)" ]];then sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $bootallow13List;fi
-	[[ -f $associatedList && $(cat $MODSIGN/src_acwl) == 1 ]] && if [[ -z "$(grep "$APKN" $associatedList)" ]];then sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $associatedList;fi;done
-
