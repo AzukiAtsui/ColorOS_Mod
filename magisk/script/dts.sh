@@ -87,17 +87,33 @@ do
 	val1="${acc[$j]}"
 	((j++))
 	val2="${acc[$j]}"
+	((j++))
+	val3="${acc[$j]}"
 	# patch1=`grep -l -r -n "$val1" $DTSTMP`
-	for patch1 in `grep -l -r -n "$(echo $val1 | sed 's/=.*/=/')" $DTSTMP`;do
-	[ -z $patch1 ] && continue
-	echo -e "\n匹配修改${patch1##*/}的$val1"
-	sed -i "s/$val1/$val2/g" $patch1
-		if [ $? -ne 0 ];then
-			echo "line $j failed!"
-			exit 8
-		else
-			echo "line $j succeed! "
-		fi
+	# [ -z "$patch1" ] && continue
+		echo -e "\n\n##########################################"
+		echo "# At filed $(($((j + 1))/3)) : $val1 "
+		echo "##########################################"
+	for patch1 in `grep -l -r -n "$val1" $DTSTMP`
+	do
+		echo -e "\n## Editing ${patch1##*/}..."
+		function match1() { sed -n "/$val1\ $val2/p" $patch1 | sed 's/^[[:space:]]*//' ; }
+			if [ -z "`match1`" ]
+			then
+				echo "! UNMATCHED PATTERN1 : $val2"
+				continue
+			fi
+		echo "#### Found :"
+		match1
+		echo ""
+		echo "#### Modify <value> to $val3..."
+	sed -i "/$val1/s/$val2/$val3/g" $patch1
+			if [ $? -ne 0 ];then
+				echo "✘ FAILED."
+				exit 8
+			else
+				echo "✔ SUCCEED."
+			fi
 	done
 	((j++))
 done
