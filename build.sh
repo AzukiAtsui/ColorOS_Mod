@@ -83,8 +83,8 @@ pJson(){
 pvTag(){
 	cd $workdir
 	git add .
-	git commit -m "$ver($versioncode)"
-	git push -u origin dev
+	git commit -m "Release dev edition $ver($versioncode)"
+	git push -f origin dev
 	last_commit=$(git log --pretty=format:"%h" | head -1  | awk '{print $1}')
 		# delete old same-name tag
 		git tag -d "$tagname"
