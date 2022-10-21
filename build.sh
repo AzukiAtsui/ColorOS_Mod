@@ -62,7 +62,7 @@ echo "{
 	\"version\": \"$ver\",
 	\"versionCode\": $versioncode,
 	\"zipUrl\": \"https://github.com/AzukiAtsui/ColorOS_Mod/releases/download/$tagname/$zip_nm\",
-	\"changelog\": \"https://github.com/AzukiAtsui/ColorOS_Mod/raw/dev/changelog.md\"
+	\"changelog\": \"https://github.com/AzukiAtsui/ColorOS_Mod/raw/$branch/changelog.md\"
 }" >$new_json
 sed -i "1c ### _$ver$([ "$dayno" -gt 1 ] && echo "($dayno)")_  by   AzukiAtsui   $year-$(date "+%m-%d")" $new_chg
 }
@@ -83,8 +83,8 @@ pJson(){
 pvTag(){
 	cd $workdir
 	git add .
-	git commit -m "Release dev edition $ver($versioncode)"
-	git push -f origin dev
+	git commit -m "Release $branch edition $ver($versioncode)"
+	git push -u origin $branch
 	last_commit=$(git log --pretty=format:"%h" | head -1  | awk '{print $1}')
 		# delete old same-name tag
 		git tag -d "$tagname"
@@ -95,7 +95,8 @@ pvTag(){
 
 main(){
 [ -z $ver ] && return 77
-[ -z $dayno ] && return 76
+if [ -z $dayno ];then return 76
+else [ -z $branch ] && return 75 ;fi
 	mZip
 	mJson
 	pJson
@@ -107,6 +108,7 @@ main
 case $? in
 	77) echo "请定义版本号变量，如：ver='v1.1.9'";;
 	76) echo "请定义次数变量，如：dayno=1";;
+	75) echo "请定义需要上传的远端分支名，如：branch=dev";;
 	66) echo "变量upd≠1，故不上传远端";;
 	*) echo "完成";;
 esac
