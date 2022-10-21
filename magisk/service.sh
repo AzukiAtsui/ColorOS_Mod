@@ -29,6 +29,7 @@ done
 
 # Make SafetyNet pass
 resetprop ro.boot.flash.locked 1
-# resetprop ro.boot.vbmeta.device_state locked
+# Revert changes when boot completed
+resetprop ro.boot.vbmeta.device_state locked
 resetprop ro.boot.verifiedbootstate green
 

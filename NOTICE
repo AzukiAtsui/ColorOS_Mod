@@ -19,6 +19,7 @@ This project incorporates components from the projects listed below. The origina
 3. bash  version 5.2.0(3)-rc4  (https://www.gnu.org/software/bash/)
 4. topjohnwu/Magisk  (https://github.com/topjohnwu/Magisk)
 5. liuran001/GJZS  Block_Device_Name.sh and Forbid_AVB.sh  (https://github.com/liuran001/GJZS)
+6. wuxianlin/ColorOSMagisk  v1.2  (https://github.com/wuxianlin/ColorOSMagisk)
 
 
 mkdtimg NOTICES AND INFORMATION BEGIN HERE
@@ -684,4 +685,15 @@ liuran001/GJZS is free software; you can redistribute it and/or modify it under 
 
 =========================================
 END OF liuran001/GJZS NOTICES AND INFORMATION
+
+
+wuxianlin/ColorOSMagisk NOTICES AND INFORMATION BEGIN HERE
+=========================================
+
+Copyright © 2021  wuxianlin and MlgmXyysd
+
+There is not a LICENSE or NOTICE file in wuxianlin/ColorOSMagisk repository <https://github.com/wuxianlin/ColorOSMagisk>.
+
+=========================================
+END OF wuxianlin/ColorOSMagisk NOTICES AND INFORMATION
 

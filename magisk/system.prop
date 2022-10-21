@@ -23,8 +23,9 @@
 persist.vendor.enable.hans=false
 sys.hans.enable=false
 
-# Unlocked state
+# fix fingerprint when magiskhide enabled. by wuxianlin
 ro.boot.flash.locked=0
-# ro.boot.vbmeta.device_state=unlocked
+# Fix fingerprint on ColorOS devices. by MlgmXyysd
+ro.boot.vbmeta.device_state=unlocked
 ro.boot.verifiedbootstate=orange
 
