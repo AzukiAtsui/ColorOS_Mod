@@ -1,0 +1,37 @@
+# Copyright 2022 AzukiAtsui. All Rights Reserved.
+#
+# pt: point, 1pt = 1/72 inch, physical unit used in the printing industry.
+# dpi: dot per inch, refers to the resolution of a printer.
+# px: pixel / picture cell, commonly square, 1pt = (ppi / 72) px, ppi * px = 1 inch , px = (1 / ppi) inch = dp * (dpi / 160)
+# ppi: pixel per inch. ppi = [screen horizontal px] / [screen horizontal inch] . On common LCD RGB screen, dpi = ppi = √([screen horizontal px]＾2 + [screen vertical px]＾2) / [diagonal length in inches] . AMOLED ppi = √(2/3) LCD ppi .
+# Diagonal dot pitch is the diagonal distance from the center of one pixel to the center of the next. Dot pitch = [screen diagonal inch] / [screen diagonal px] , 1pt=1/(Dot pitch * 72) when squre px.
+# PhotoShop 144ppi canvas, 1pt=(144 / 72) px=2px=XHDPI 1dp . 300ppi good for A4 paper size.
+#
+# dp: dip, Density-independent pixel, Android Design length unit, 1dp is defined as 1px when the screen density value is 160ppi, that is, when MDPI, 1dp = 1px
+# LDPI=120 MDPI=160(BASELINE) HDPI=240 XHDPI=320 XXHDPI=480 XXXHDPI=640
+# ldpi : mdpi : hdpi : xhdpi : xxhdpi = 0.75 : 1 : 1.5 : 2 : 3
+#
+# swdp=SW*160/dpi , SW=Physical Smallest Width, length of the shortest side of screen, dpi=$(getprop ro.sf.lcd_density), dp should be -le and closest to swdp
+#
+# sp: scale-independent pixel, unit of Android font size. When the font size is "Normal", 1sp=1dp , "Large", 1sp>1dp .
+#
+
+# default value for realme GT 2 Pro : 1440*3216px 6.7inch Samsung AMOLED screen, √(1440^2+3216^2)÷6.7 * √(2/3) ≈ 429.41 ppi, 480 dpi, 480 swdp, Devoloper options - Smallest width = 360
+# ro.sf.lcd_density=480
+
+# Disable thermal
+persist.vendor.enable.hans=false
+sys.hans.enable=false
+
+# fix fingerprint when magiskhide enabled. by wuxianlin
+ro.boot.flash.locked=0
+# Fix fingerprint on ColorOS devices. by MlgmXyysd
+ro.boot.vbmeta.device_state=unlocked
+ro.boot.verifiedbootstate=orange
+
+# enable bootsound
+## 关机铃声
+persist.sys.poweroffsound=2
+persist.sys.nobootsound=0
+## when 'persist.sys.nobootsound=0' 'persist.sys.oplus.silence' will be set 0
+

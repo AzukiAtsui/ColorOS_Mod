@@ -1,0 +1,6 @@
+*.zip
+*.img
+*.json
+magisk/dts/
+magisk/sign/
+

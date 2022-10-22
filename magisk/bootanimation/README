@@ -1,0 +1,10 @@
+This dir would be mounted to /my_product/media/bootanimation/
+by 'post-fs-data.sh'.
+
+'bootanimation.zip' is startup animation.
+
+'rbootanimation.zip' is the animation for both 'Power off' and 'Restart'.
+
+'poweroff.ogg' will be played when poweroff or restart.
+The 'poweroff.ogg' in ColorOS_Mod repository is the music "Quick Metal Riff 1.mp3" written by Brett VanDonsel, which is available for commercial and non-commercial purposes.
+

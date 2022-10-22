@@ -1,0 +1,5 @@
+<permissions>
+    <feature name="oppo.systemui.highlight.nodeveloper" />
+    <feature name="oppo.settings.verification.dialog.disallow"/>
+    <feature name="oppo.settings.account.dialog.disallow" />
+</permissions>
