@@ -18,7 +18,6 @@ More info: [**ColorOS_Mod Homepage &rarr;**](https://azukiatsui.github.io/2022/0
 
 ### Prebuilt binaries
 
-- [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) , from AOSP
+- [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) , from AOSP.
 - [dtc](https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
-- [bash](https://ftp.gnu.org/gnu/bash/) , from [GNU Project](https://www.gnu.org/software/bash/) . [bash-5.2-rc4 backup](https://pan.baidu.com/s/1bHtUdheyBgIwixLqpycgHg?pwd=bash) 提取码:bash
-
+- [bash](https://ftp.gnu.org/gnu/bash/) , from [GNU Project](https://www.gnu.org/software/bash/).

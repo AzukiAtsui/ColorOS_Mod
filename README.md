@@ -18,7 +18,6 @@ ColorOS_Mod 是一个修改ColorOS 或 realmeUI 系统配置的 [Magisk模块](h
 
 ### 预编译的二进制文件
 
-- [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) ，来自 AOSP
+- [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) ，来自 AOSP。
 - [dtc](https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
-- [bash](https://ftp.gnu.org/gnu/bash/) ，来自 [GNU Project](https://www.gnu.org/software/bash/) 。[bash-5.2-rc4 备份](https://pan.baidu.com/s/1bHtUdheyBgIwixLqpycgHg?pwd=bash) 提取码:bash
-
+- [bash](https://ftp.gnu.org/gnu/bash/) ，来自 [GNU Project](https://www.gnu.org/software/bash/)。
