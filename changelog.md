@@ -1,6 +1,6 @@
-### _v1.2.3_  by   AzukiAtsui   2022-10-25
+### _v1.2.3(2)_  by   AzukiAtsui   2022-10-25
 #### Changelog
-- Update bin/bash to latest GNU Bash version 5.2.2(1).
+- Update bin/bash to latest GNU Bash version 5.2.2(2)-release.
 - Fix high CPU usage.
 - Update customize.sh :
 	* beauty print style
@@ -8,7 +8,7 @@
 	* reduce unnecessary shell.
 
 #### 更新日志
-- 更新 bin/bash 到最新的 GNU Bash 5.2.2(1) 版本。
+- 更新 bin/bash 到最新的 GNU Bash 5.2.2(2)-release 版本。
 - 修复高CPU占用。
 - 更新安装脚本：
 	* 美化输出样式
