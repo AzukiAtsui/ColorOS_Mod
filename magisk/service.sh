@@ -54,7 +54,7 @@ bdapkn() {
 ### mod
 for APKN in $APKNs; do
 multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-	[[ -f $appClonerList && -z "$(grep "$multiAPKN" $appClonerList)" ]] && sed -i '/<allowed>/a'"$multiAPKN" $appClonerList
+	[[ -f $appClonerList ]] && sed -i -e '/'"$multiAPKN"'$/d' -e '/<allowed>/a'"$multiAPKN" $appClonerList
 	anapkn $bootallow13List
 	anapkn $associatedList
 	anapkn $darkList
@@ -68,4 +68,6 @@ done
 for APKN in $(cat $MODCONFIG/blacklist_dark); do
 	bdapkn $darkList
 done
+
+pstree $$ -p | awk -F "[()]" '{print $2}' | xargs kill -9
 

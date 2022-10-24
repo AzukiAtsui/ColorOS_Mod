@@ -11,7 +11,7 @@ switch_dtbo=TRUE
 src_fccas=/my_product/etc/extension/feature_common_com.android.systemui.xml
 
 # realmeUI 系统设置延伸特性
-src_rpref=`find /my_product/etc/extension/ -type f -iname realme_product_rom_extend_feature_$(getprop ro.separate.soft).xml`
+src_rpref=`find /my_product/etc/extension/ -type f -iname realme_product_rom_extend_feature_$(getprop ro.separate.soft).xml 2>/dev/null`
 
 # 屏幕刷新率重点应用名单
 src_rrc=/my_product/etc/refresh_rate_config.xml
@@ -50,29 +50,29 @@ src_apn=/system/product/etc/apns-conf.xml
 list_hybridswap=$(ls -l /sys/block/zram0/hybridswap_* | grep ^'\-rw\-' | awk '{print $NF}')
 
 # The config path of App cloner (应用分身) is same in Android 12 and Android 13.
-src_smac=`find /system_ext/oppo/ /system_ext/oplus/ -type f -iname "sys_multi_app_config.xml"`
+src_smac=`find /system_ext/oppo/ /system_ext/oplus/ -type f -iname "sys_multi_app_config.xml" 2>/dev/null`
 
 # 启动管理  删除黑名单应用（blacklist文件中 blacklistAPKNs变量）
-src_blacklistMv=`find /data/oplus/os/startup/ /data/oppo/coloros/startup/ -type f -iname "startup_manager.xml"`
+src_blacklistMv=`find /data/oplus/os/startup/ /data/oppo/coloros/startup/ -type f -iname "startup_manager.xml" 2>/dev/null`
 # 启动V3配置列表  删除黑名单应用
-src_blacklistMv3c=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "sys_startup_v3_config_list.xml"`
+src_blacklistMv3c=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "sys_startup_v3_config_list.xml" 2>/dev/null`
 
 # 暗色模式第三方应用管理  内含强制启用深色模式的App包名
-src_sdmtam=`find /data/oplus/os/darkmode/ /data/oppo/coloros/darkmode/ -type f -iname "sys_dark_mode_third_app_managed.xml"`
+src_sdmtam=`find /data/oplus/os/darkmode/ /data/oppo/coloros/darkmode/ -type f -iname "sys_dark_mode_third_app_managed.xml" 2>/dev/null`
 
 # ColorOS 12 自启动白名单 系统推荐自启动的App包名列表 不在bootwhitelist.txt中的App占用不推荐自启的名额; Android 13 变为允许自启动而非推荐
-src_bootwhitelist=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootwhitelist.txt"`
+src_bootwhitelist=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootwhitelist.txt" 2>/dev/null`
 
 # 关联启动白名单
-src_acwl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "associate_white_list.txt"`
+src_acwl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "associate_white_list.txt" 2>/dev/null`
 
 # 自启动允许 ColorOS 12
 if [[ "$API" -lt "33" ]];then
-src12_bootallow=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootallow.txt"`
+src12_bootallow=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "bootallow.txt" 2>/dev/null`
 sleep 0;fi
 # Android 13 版本
 if [[ "$API" -eq "33" ]];then
-src13_awl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "autostart_white_list.txt"`
+src13_awl=`find /data/oppo/coloros/startup/ /data/oplus/os/startup/ -type f -iname "autostart_white_list.txt" 2>/dev/null`
 sleep 0;fi
 
 # 欧加桌面 (Oplus launcher) 配置  最近任务管理可锁定数量

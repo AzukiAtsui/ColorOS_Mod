@@ -16,7 +16,7 @@ This project incorporates components from the projects listed below. The origina
 
 1. mkdtimg  (https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/)
 2. dtc  version 1.4.4-Android-build  (https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
-3. bash  version 5.2.0(3)-rc4  (https://www.gnu.org/software/bash/)
+3. bash  version 5.2.2(1)  (https://www.gnu.org/software/bash/)
 4. topjohnwu/Magisk  (https://github.com/topjohnwu/Magisk)
 5. liuran001/GJZS  Block_Device_Name.sh and Forbid_AVB.sh  (https://github.com/liuran001/GJZS)
 6. wuxianlin/ColorOSMagisk  v1.2  (https://github.com/wuxianlin/ColorOSMagisk)
