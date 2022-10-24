@@ -1,7 +1,7 @@
 id=coloros_mod
 name=ColorOS_Mod
 version=v1.2.3
-versioncode=2210251
+versioncode=2210252
 author=AzukiAtsui
 description=Modify ColorOS and realmeUI configs. Repo: https://github.com/AzukiAtsui/ColorOS_Mod
 updateJson=https://AzukiAtsui.github.io/ColorOS_Mod/release/main.json
