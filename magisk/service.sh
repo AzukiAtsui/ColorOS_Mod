@@ -44,18 +44,18 @@ source $MODCONFIG/blacklist
 
 ## function for simple lists.
 anapkn() {
-  if [[ -f $1 && $(cat $MODSIGN/${1##*/}) == 1 ]]; then
-      sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $1
+  if [[ -f $1 && "$(cat $MODSIGN/${1##*/})" == "1" ]]; then
+      sed -i -e '/'"$APKN"'$/d' -e '$a'"$APKN" $1
   fi
 }
 bdapkn() {
-  if [[ -f $1 && $(cat $MODSIGN/${1##*/}) == 1 ]]; then
-      sed -i -e '/'$APKN'$/d' $1
+  if [[ -f $1 && "$(cat $MODSIGN/${1##*/})" == "1" ]]; then
+      sed -i -e '/'"$APKN"'$/d' $1
   fi
 }
 ### mod
 for APKN in $APKNs; do
-multiAPKN="<item\ name\=\"$APKN\"\ \/>"
+	multiAPKN="<item\ name\=\"$APKN\"\ \/>"
 	[[ -f $appClonerList ]] && sed -i -e '/'"$multiAPKN"'$/d' -e '/<allowed>/a'"$multiAPKN" $appClonerList
 	anapkn $bootallow13List
 	anapkn $associatedList
