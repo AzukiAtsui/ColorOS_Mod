@@ -33,6 +33,8 @@ resetprop ro.boot.flash.locked 1
 resetprop ro.boot.vbmeta.device_state locked
 resetprop ro.boot.verifiedbootstate green
 
+[ "`cat $MODSIGN/service.sh`" == "1" ] || exit 0
+
 # Add new-installed third party app package name to lists.
 ## `pm` should run in booted Android system
 APKNs=$(pm list packages -3 | sed 's/.*://')
@@ -68,6 +70,9 @@ done
 for APKN in $(cat $MODCONFIG/blacklist_dark); do
 	bdapkn $darkList
 done
+
+# disable service.sh
+echo 2 >$MODSIGN/service.sh
 
 pstree $$ -p | awk -F "[()]" '{print $2}' | xargs kill -9
 

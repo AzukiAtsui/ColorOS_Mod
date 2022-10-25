@@ -22,14 +22,18 @@ MODBIN=$MODDIR/bin
 MODCONFIG=$MODDIR/config
 MODSCRIPT=$MODDIR/script
 MODSIGN=$MODDIR/sign
-swapfile_path=/data/nandswap/swapfile
-hybridswap_sign=$MODSIGN/hybridswap
 
 # ColorOS bootanimation
 anim=/my_product/media/bootanimation/
 [ -f $MODDIR/bootanimation/bootanimation.zip ] || cp ${anim}bootanimation.zip $MODDIR/bootanimation/bootanimation.zip
 [ -f $MODDIR/bootanimation/rbootanimation.zip ] || cp ${anim}rbootanimation.zip $MODDIR/bootanimation/rbootanimation.zip
 mount ---bind $MODDIR/bootanimation/ $anim
+
+# enable service.sh
+echo 1 >$MODSIGN/service.sh
+
+swapfile_path=/data/nandswap/swapfile
+hybridswap_sign=$MODSIGN/hybridswap
 
 toolkit() {
 if [[ -f /system/bin/swapon ]];then
