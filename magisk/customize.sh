@@ -105,15 +105,15 @@ tplFUN() {
 }
 
 ckFUN() {
-local SRC NM FUN PSI MC
-	SRC="$1"; NM="$2文件"; FUN=$3; PSI="$4"; MC="$5"
-if [ -z "$SRC" ]; then
-	echo "✘ 未定义 $NM"
-	[ -z "$MC" ] || echo "* 可能的原因：$MC"
-else
 	echo2n
-	tplFUN "$SRC" "$NM" $FUN "$PSI"
-fi
+	local SRC NM FUN PSI MC
+		SRC="$1"; NM="$2文件"; FUN=$3; PSI="$4"; MC="$5"
+	if [ -z "$SRC" ]; then
+		echo "✘ 未定义 $NM"
+		[ -z "$MC" ] || echo "* 可能的原因：$MC"
+	else
+		tplFUN "$SRC" "$NM" $FUN "$PSI"
+	fi
 }
 
 
