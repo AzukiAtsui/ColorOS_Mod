@@ -7,6 +7,9 @@
 # dtbo镜像配置修改 ; 在 ColorOS_Mod.zip/config/dts 确认参数
 switch_dtbo=TRUE
 
+# splash/logo 开机第一屏镜像配置修改 ; 通常 ColorOS_Mod.zip/config/boot.bmp 是开机第一屏
+# switch_splash=1
+
 # ColorOS 13 系统设置延伸特性  例如：息屏指纹盲解
 src_fccas=/my_product/etc/extension/feature_common_com.android.systemui.xml
 

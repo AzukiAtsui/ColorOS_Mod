@@ -2,5 +2,6 @@
 *.img
 *.json
 magisk/dts/
+magisk/splash/
 magisk/sign/
 

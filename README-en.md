@@ -21,3 +21,4 @@ More info: [**ColorOS_Mod Homepage &rarr;**](https://azukiatsui.github.io/2022/0
 - [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) , from AOSP.
 - [dtc](https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
 - [bash](https://ftp.gnu.org/gnu/bash/) , from [GNU Project](https://www.gnu.org/software/bash/).
+- [opsplash](https://github.com/affggh/opsplash) , Copyright affggh.

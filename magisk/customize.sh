@@ -139,6 +139,16 @@ if [[ "$switch_dtbo" == "TRUE" ]]; then echo "- 开始修改 dtbo镜像"
 	esac
 else echo "- 开关已关闭，跳过修改 dtbo镜像"; echo 3 >$ColorOS_MOD_SIGN/dtbo; fi
 
+echo2n
+if [ "$switch_splash" == "1" ]; then echo "- 开始修改 splash/logo镜像(开机第一屏)"
+	if [ "`cat $ColorOS_MOD_DIR/sign/splash`" == "1" ]; then echo "✔ 已刷入过修改后的 splash/logo"; echo 1 >$ColorOS_MOD_SIGN/splash; fi
+	bash $ColorOS_MOD_SCRIPT/opsplash.sh
+	case $? in
+		0) echo -e "* 刷入成功\n★ 请勿删除或移动 $ColorOS_MOD_DIR 目录的splash.img\n★ 在将来，卸载 ColorOS_Mod 时会刷回原版splash.img";;
+		255) echo "* 这次没有改开机第一屏，但可以继续下面的修改";;
+	esac
+else echo "- 开关已关闭，跳过修改 splash/logo镜像"; echo 3 >$ColorOS_MOD_SIGN/splash; fi
+
 FUN_fccas() {
 	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "未知错误！请联系开发者修复！"
 	sed -i -e '/enable_fp_blind_unlock/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.enable_fp_blind_unlock"/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
@@ -303,7 +313,7 @@ echo -e "\n\n\n\n######### 以下编辑 /data/ 目录内文件 #########"
 
 FUN_blacklistMv(){
 	for APKN in $blacklistAPKNs; do
-		sed -i '/'"$APKN"'/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行"
+		sed -i '/'"$APKN"'/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行" >&2
 	done
 }
 ckFUN "$src_blacklistMv" "启动管理" FUN_blacklistMv
@@ -328,18 +338,18 @@ FUN_sdmtam(){
 		sed -i -e '/'"$darkAPKN"'$/d' -e '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2;
 	done
 	for APKN in $baddark; do darkAPKN="<p\ attr\=\"$APKN\"\/>"
-		sed -i '/'"$darkAPKN"'/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行"
+		sed -i '/'"$darkAPKN"'/d' $pfd && echo "[删除] 含有 'config/blacklist_dark' 列出的 $APKN 的行" >&2
 	done
 	tplFUN ${src_sdmtam%/*}/open_app "暗色模式开启应用名单" apknda
 	# tplFUN 会重置 $pfd
-	for APKN in $baddark; do sed -i '/'"$APKN"'$/d' $pfd && echo "[删除] 含有 'config/blacklist_dark' 列出的 $APKN 的行"; done
+	for APKN in $baddark; do sed -i '/'"$APKN"'$/d' $pfd && echo "	[删除] 含有 'config/blacklist_dark' 列出的 $APKN 的行" >&2; done
 	local SRC=${src_sdmtam%/*}/open_app ; apknlu $SRC dark
 }
 ckFUN "$src_sdmtam" "暗色模式第三方应用管理" FUN_sdmtam "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常"
 
 apknAdd() {
 	apknda
-	for APKN in $blacklistAPKNs; do sed -i '/'"$APKN"'$/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行"; done
+	for APKN in $blacklistAPKNs; do sed -i '/'"$APKN"'$/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行" >&2; done
 	apknlu $src13_awl bootallow13
 	apknlu $src_acwl associated
 }

@@ -21,3 +21,4 @@ ColorOS_Mod 是一个修改ColorOS 或 realmeUI 系统配置的 [Magisk模块](h
 - [mkdtimg](https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/) ，来自 AOSP。
 - [dtc](https://github.com/AzukiAtsui/dtc-aosp/tree/standalone)
 - [bash](https://ftp.gnu.org/gnu/bash/) ，来自 [GNU Project](https://www.gnu.org/software/bash/)。
+- [opsplash](https://github.com/affggh/opsplash) ，© affggh。
