@@ -17,7 +17,7 @@
 # along with ColorOS_Mod.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-MODDIR=$(cd "${0%/*}/..";pwd)
+MODDIR=${ColorOS_MOD_INSTALL_PATH:-$(cd ${0%/*/*};pwd)}
 MODBIN=$MODDIR/bin
 MODCONFIG=$MODDIR/config
 MODSCRIPT=$MODDIR/script
