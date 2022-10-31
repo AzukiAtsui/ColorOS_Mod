@@ -1,16 +1,8 @@
-### _v1.2.3(2)_  by   AzukiAtsui   2022-10-25
+### _v1.3.0_  by   AzukiAtsui   2022-10-31
 #### Changelog
-- Update bin/bash to latest GNU Bash version 5.2.2(2)-release.
-- Fix high CPU usage.
-- Update customize.sh :
-	* beauty print style
-	* fix path error
-	* reduce unnecessary shell.
+- New modify splash/logo (boot screen), off by default.
+- Correct quote variables.
 
 #### 更新日志
-- 更新 bin/bash 到最新的 GNU Bash 5.2.2(2)-release 版本。
-- 修复高CPU占用。
-- 更新安装脚本：
-	* 美化输出样式
-	* 修复路径错误
-	* 减少不必要命令行。
+- 新增修改 splash 或 logo（开机第一屏），默认关闭。
+- 改正引用变量。

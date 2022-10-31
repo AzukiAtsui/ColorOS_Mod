@@ -33,6 +33,8 @@ resetprop ro.boot.flash.locked 1
 resetprop ro.boot.vbmeta.device_state locked
 resetprop ro.boot.verifiedbootstate green
 
+[ "`cat $MODSIGN/service.sh`" == "1" ] || exit 0
+
 # Add new-installed third party app package name to lists.
 ## `pm` should run in booted Android system
 APKNs=$(pm list packages -3 | sed 's/.*://')
@@ -42,18 +44,18 @@ source $MODCONFIG/blacklist
 
 ## function for simple lists.
 anapkn() {
-  if [[ -f $1 && $(cat $MODSIGN/${1##*/}) == 1 ]]; then
-      sed -i -e '/'$APKN'$/d' -e '$a'"$APKN" $1
+  if [[ -f $1 && "$(cat $MODSIGN/${1##*/})" == "1" ]]; then
+      sed -i -e '/'"$APKN"'$/d' -e '$a'"$APKN" $1
   fi
 }
 bdapkn() {
-  if [[ -f $1 && $(cat $MODSIGN/${1##*/}) == 1 ]]; then
-      sed -i -e '/'$APKN'$/d' $1
+  if [[ -f $1 && "$(cat $MODSIGN/${1##*/})" == "1" ]]; then
+      sed -i -e '/'"$APKN"'$/d' $1
   fi
 }
 ### mod
 for APKN in $APKNs; do
-multiAPKN="<item\ name\=\"$APKN\"\ \/>"
+	multiAPKN="<item\ name\=\"$APKN\"\ \/>"
 	[[ -f $appClonerList ]] && sed -i -e '/'"$multiAPKN"'$/d' -e '/<allowed>/a'"$multiAPKN" $appClonerList
 	anapkn $bootallow13List
 	anapkn $associatedList
@@ -68,6 +70,9 @@ done
 for APKN in $(cat $MODCONFIG/blacklist_dark); do
 	bdapkn $darkList
 done
+
+# disable service.sh
+echo 2 >$MODSIGN/service.sh
 
 pstree $$ -p | awk -F "[()]" '{print $2}' | xargs kill -9
 

@@ -28,3 +28,7 @@ echo 2 >$MODSIGN/dtbo
 chmod +x $MODBIN/bash
 $MODBIN/bash $MODSCRIPT/dts.sh
 
+# recovery splash
+echo 2 >$MODSIGN/splash
+. $MODSCRIPT/opsplash.sh
+
