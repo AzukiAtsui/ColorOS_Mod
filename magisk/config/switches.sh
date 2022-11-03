@@ -10,6 +10,9 @@ switch_dtbo=TRUE
 # splash/logo 开机第一屏镜像配置修改 ; 通常 ColorOS_Mod.zip/config/boot.bmp 是开机第一屏
 # switch_splash=1
 
+# =1 为启用时间显秒，=0 或其它情况为禁用（settings put secure clock_seconds $status 方案）
+switch_cs=1
+
 # ColorOS 13 系统设置延伸特性  例如：息屏指纹盲解
 src_fccas=/my_product/etc/extension/feature_common_com.android.systemui.xml
 

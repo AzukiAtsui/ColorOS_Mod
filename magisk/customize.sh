@@ -149,6 +149,12 @@ if [ "$switch_splash" == "1" ]; then echo "- 开始修改 splash/logo镜像(开�
 	esac
 else echo "- 开关已关闭，跳过修改 splash/logo镜像"; echo 3 >$ColorOS_MOD_SIGN/splash; fi
 
+echo2n
+case "$switch_cs" in
+	1) echo "✔ 启用时间显秒"; settings put secure clock_seconds 1 ;;
+	*) echo "✘ 禁用时间显秒"; settings put secure clock_seconds 0 ;;
+esac
+
 FUN_fccas() {
 	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "未知错误！请联系开发者修复！"
 	sed -i -e '/enable_fp_blind_unlock/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.enable_fp_blind_unlock"/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
