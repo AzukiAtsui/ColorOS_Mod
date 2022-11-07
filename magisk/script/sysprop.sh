@@ -60,12 +60,17 @@ project_name=`getprop ro.separate.soft` ;# ro.boot.prjname
 product_brand=`getprop ro.product.vendor.brand`
 market_enname=`getprop ro.vendor.oplus.market.enname`
 [ -z "$market_enname" ] && market_enname=`getprop ro.oppo.market.enname`
+SOC=`getprop ro.soc.model`
+[ -z "$SOC" ] && SOC=`getprop ro.build.device_family | sed 's/^OP//'`
+COSV=`getprop ro.build.version.oplusrom`
+[ -z "$COSV" ] && COSV=`getprop ro.build.version.opporom`
 
 echo ""
 echo "- ** 设备信息 (DEVICE INFO) **"
 echo "- 品牌 (Brand) : $product_brand"
+echo "- 品名 (Product Name) : `getprop ro.product.name`"
 echo "- 型号 (Model) : $product_model"
-echo "- 商品名 (Market Name) : `getprop ro.vendor.oplus.market.name`"
+echo "- 市场名 (Market Name) : `getprop ro.vendor.oplus.market.name`"
 [ -z "$market_enname" ] || echo "- Market English Name : $market_enname"
 echo "- 设备码 (Device ID) : $product_id"
 echo "- 项目 (Project Name) : $project_name"
@@ -74,12 +79,12 @@ echo "- 地区 (Locale) : `getprop ro.product.locale`"
 echo "- 国家/区域 (Nation/Region) : `chkNvid`"
 echo "- 版本号 (Build number) : `getprop ro.build.display.id`"
 echo "- OTA版本 (OTA Version) : $ota_version"
-echo "- ColorOS 版本 (ColorOS Version) : `getprop ro.build.version.oplusrom`"
+echo "- ColorOS 版本 (ColorOS Version) : $COSV"
 [ -z $rui_version ] || echo "- realmeUI 版本 (realmeUI Version) : $rui_version"
 echo "- 基线版本 (Baseline) : `getprop ro.build.version.incremental`"
 echo "- Android 版本 (Android Version) : `getprop ro.build.version.release`"
 echo "- API level : $API"
-echo "- SOC 型号 (SOC Model): `getprop ro.soc.model`"
+echo "- SOC 型号 (SOC Model): $SOC"
 echo "- CPU 架构 (CPU architecture) : $ARCH"
 echo "- 内核版本 (Kernel Version) : `uname -a`"
 echo "- 运存大小 (RAM/memory Info) : `free -m|grep "Mem"|awk '{print $2}'` MB ; 已用 (Uesd) : `free -m|grep "Mem"|awk '{print $3}'` MB ; 剩余 (Availale) : $((`free -m|grep "Mem"|awk '{print $2}'`-`free -m|grep "Mem"|awk '{print $3}'`)) MB"
