@@ -24,7 +24,8 @@ $BOOTMODE || abort " ColorOS_Mod cannot be installed in recovery."
 nvid=`getprop ro.build.oplus_nv_id`
 [ -z "$nvid" ] && abort " Not ColorOS or realmeUI !"
 # What is API Level? See <https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels>
-if [ $API -le 30 ]; then abort " Not support Android 11 and older Android version."
+if [ $API -lt 30 ]; then abort " Not support Android 10 and older Android version."
+elif [ $API -eq 30 ]; then echo " Hello, Android 11 user. •ᴗ•"
 elif [ $API -le 32 ]; then echo " Hello, Android 12 user. ❛‿˂̵✧"
 elif [ $API -eq 33 ]; then echo " Hello, Android 13 user. (＾Ｕ＾)ノ~"
 fi
@@ -109,7 +110,7 @@ ckFUN() {
 	local SRC NM FUN PSI MC
 		SRC="$1"; NM="$2文件"; FUN=$3; PSI="$4"; MC="$5"
 	if [ -z "$SRC" ]; then
-		echo "✘ 未定义 $NM"
+		echo "✘ 未定义$NM"
 		[ -z "$MC" ] || echo "* 可能的原因：$MC"
 	else
 		tplFUN "$SRC" "$NM" $FUN "$PSI"
@@ -158,7 +159,6 @@ esac
 FUN_fccas() {
 	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "未知错误！请联系开发者修复！"
 	sed -i -e '/enable_fp_blind_unlock/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.enable_fp_blind_unlock"/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
-	sed -i -e '/prevented_screen_burn/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.prevented_screen_burn"/>' $pfd && echo "<!-- indicate if the device is prevented screen burn -->"
 	sed -i '/disable_volume_blur/d' $pfd && echo "[删除] 禁用音量面板模糊"
 }
 ckFUN "$src_fccas" " ColorOS 13 系统设置延伸特性" FUN_fccas
@@ -166,7 +166,7 @@ ckFUN "$src_fccas" " ColorOS 13 系统设置延伸特性" FUN_fccas
 FUN_rpref(){
 	sed -i '/move_dc_to_develop/d' $pfd && echo "[删除] 移动DC调光到开发者选项设置"
 }
-ckFUN "$src_rpref" " realmeUI 系统设置延伸特性" FUN_rpref
+ckFUN "$src_rpref" " realmeUI 3.0~4.0 系统设置延伸特性" FUN_rpref
 
 FUN_rcc(){
 	sed -i 's/rateId="[0-9]-[0-9]-[0-9]-[0-9]/rateId="3-1-2-3/g' $pfd && echo "[修改] APP刷新率模式为 3-1-2-3，与设置的屏幕刷新率匹配"
@@ -223,9 +223,9 @@ sed -i 's/gpu="-*[0-9]*/gpu="-1/g' $pfd && echo "[修改] GPU -1"
 sed -i 's/cameraBrightness="[0-9]*/cameraBrightness="255/g' $pfd && echo "[修改] 相机亮度 255"
 	sed -i -e 's/restrict="[0-9]*/restrict="0/g' -e 's/brightness="[0-9]*/brightness="0/g' -e 's/charge="[0-9]*/charge="0/g' -e 's/modem="[0-9]*/modem="0/g' -e 's/disFlashlight="[0-9]*/disFlashlight="0/g' -e 's/stopCameraVideo="[0-9]*/stopCameraVideo="0/g' -e 's/disCamera="[0-9]*/disCamera="0/g' -e 's/disWifiHotSpot="[0-9]*/disWifiHotSpot="0/g' -e 's/disTorch="[0-9]*/disTorch="0/g' -e 's/disFrameInsert="[0-9]*/disFrameInsert="0/g' -e 's/refreshRate="[0-9]*/refreshRate="0/g' -e 's/disVideoSR="[0-9]*/disVideoSR="0/g' -e 's/disOSIE="[0-9]*/disOSIE="0/g' -e 's/disHBMHB="[0-9]*/disHBMHB="0/g' $pfd && echo "[禁用] 部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB"
 }
-ckFUN "$src_stcc" "系统高温控制配置" FUN_stcc
+ckFUN "$src_stcc" " ColorOS 12~13 系统高温控制配置" FUN_stcc
 
-ckFUN "$src_stcc_gt" "realme GT模式高温控制器" FUN_stcc
+ckFUN "$src_stcc_gt" " realmeUI 3.0~4.0 GT模式高温控制器" FUN_stcc
 
 FUN_shtp(){
 	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "[禁用] $2"
@@ -261,7 +261,7 @@ FUN_stc(){
 	sed -i '/preheat_threshold>/s/>[0-9]*</>540</g' $pfd && echo "[修改] preheat_threshold为540"
 	sed -i '/preheat_dex_oat_threshold>/s/>[0-9]*</>520</g' $pfd && echo "[修改] preheat_dex_oat_threshold为520"
 }
-ckFUN "$src_stc" "高热配置" FUN_stc "请避免手机长时间处于高温状态（约44+℃）\n* 高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
+ckFUN "$src_stc" " ColorOS 12~13 高热配置" FUN_stc "请避免手机长时间处于高温状态（约44+℃）\n* 高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
 
 echo2n
 if [ -d $src_horae ]; then echo "- 检测到存在加密温控目录，尝试模块替换为空"
@@ -359,18 +359,23 @@ apknAdd() {
 	apknlu $src13_awl bootallow13
 	apknlu $src_acwl associated
 }
-ckFUN "$src_bootwhitelist" " ColorOS 12 自启动白名单 或 ColorOS 13 自启动允许名单" apknAdd
+# ckFUN "$src_bootwhitelist" " ColorOS 11~12 自启动白名单 或 ColorOS 13 允许自启动应用名单" apknAdd
+if [ $API -lt 33 ]; then
+	ckFUN "$src_bootwhitelist" " ColorOS 11~12 自启动白名单" apknAdd
+fi
 
-ckFUN "$src_acwl" "关联启动白名单" apknAdd
+# ckFUN "$src_asw" " ColorOS 11 允许关联启动名单" apknAdd
 
-ckFUN "$src12_bootallow" " ColorOS 12 自启动允许" apknAdd "" "①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
+# ckFUN "$src_acwl" " ColorOS 12~13 关联启动名单白名单" apknAdd
 
-ckFUN "$src13_awl" " ColorOS 13 自启动白名单" apknAdd "" "①注释了定义变量，②安卓12 设备，不存在autostart_white_list.txt"
+# ckFUN "$src12_bootallow" " ColorOS 11~12 允许自启动应用名单" apknAdd "" "①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
+
+ckFUN "$src13_awl" " ColorOS 13 自启动白名单" apknAdd "" "①注释了定义变量，②不存在autostart_white_list.txt"
 
 FUN_bgApp(){
 	sed -i '/lock_app_limit/s/value="[0-9]*/value="2000/' $pfd && echo "[修改] 锁定后台数量限制为2000"
 }
-ckFUN "$src_bgApp" "欧加桌面 (Oplus launcher) 配置" FUN_bgApp
+ckFUN "$src_bgApp" "系统桌面 (OPPO/Oplus launcher) 锁定后台数量限制配置" FUN_bgApp
 
 FUN_spea(){
 	sed -i 's/protectapp.*protectapp>/protectapp \/>/g' $pfd && echo "[修改] 清空<protectapp />标签"
