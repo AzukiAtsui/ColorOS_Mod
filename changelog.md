@@ -1,8 +1,10 @@
-### _v1.3.0_  by   AzukiAtsui   2022-10-31
+### _v1.4.0_  by   AzukiAtsui   2022-11-07
 #### Changelog
-- New modify splash/logo (boot screen), off by default.
-- Correct quote variables.
+- [New] Support ColorOS 11.
+- [Fix] App autostart decrease battery life and easily heat phone. Now only modify recommend list of auto lauch.
+- [Fix] Correct regex in config/dts to match definite length.
 
 #### 更新日志
-- 新增修改 splash 或 logo（开机第一屏），默认关闭。
-- 改正引用变量。
+- [新增] 支持 ColorOS 11。
+- [修复] 应用自启动会缩短续航且易使手机发热。现在只会修改自启动推荐列表。
+- [修复] 更正 config/dts 里的正则表达式，使其匹配确定的长度。
