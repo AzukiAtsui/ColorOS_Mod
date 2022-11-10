@@ -50,7 +50,6 @@ source $ColorOS_MOD_CONFIG/whitelist
 source $ColorOS_MOD_CONFIG/blacklist
 
 # 'Dark mode for 3rd-party apps' can apply Dark mode to apps that do not already contain a dark mode option. It might not work properly for some apps, which supposed to be listed their app package name in 'ColorOS_Mod.zip/config/blacklist_dark'.
-baddark=$(cat $ColorOS_MOD_CONFIG/blacklist_dark)
 
 # print system info
 source $ColorOS_MOD_SCRIPT/sysprop.sh
@@ -80,7 +79,7 @@ echo2n() { echo -e "\n\nNo. $sn"; sn=$(($sn+1)); }
 
 pfds=$ColorOS_MOD_INSTALL_PATH/post-fs-data.sh
 mountPfd() {
-	pfdDir=$(dirname "$1" | sed -e 's/^\/vendor\//\/system&/' -e 's/^\/product\//\/system&/' -e 's/^\/system_ext\//\/system&/')
+	pfdDir=$(dirname "$1" | sed -e 's|^/vendor/|/system&|' -e 's|^/product/|/system&|' -e 's|^/system_ext/|/system&|')
 	[ -d "$ColorOS_MOD_INSTALL_PATH$pfdDir" ] || mkdir -p "$ColorOS_MOD_INSTALL_PATH$pfdDir"
 	# echo "- 将复制 $1 到模块后修改"
 	cp -rf "$1" "$ColorOS_MOD_INSTALL_PATH$pfdDir"
@@ -138,7 +137,7 @@ if [[ "$switch_dtbo" == "TRUE" ]]; then echo "- 开始修改 dtbo镜像"
 		5) echo "* 这次没有改 dtbo，但可以继续下面的修改";;
 		4) echo "E! 构建dtbo失败，导致没有可刷的dtbo";;
 	esac
-else echo "- 开关已关闭，跳过修改 dtbo镜像"; echo 3 >$ColorOS_MOD_SIGN/dtbo; fi
+else echo "- 跳过修改 dtbo镜像"; echo 3 >$ColorOS_MOD_SIGN/dtbo; fi
 
 echo2n
 if [ "$switch_splash" == "1" ]; then echo "- 开始修改 splash/logo镜像(开机第一屏)"
@@ -148,7 +147,7 @@ if [ "$switch_splash" == "1" ]; then echo "- 开始修改 splash/logo镜像(开�
 		0) echo -e "* 刷入成功\n★ 请勿删除或移动 $ColorOS_MOD_DIR 目录的splash.img\n★ 在将来，卸载 ColorOS_Mod 时会刷回原版splash.img";;
 		255) echo "* 这次没有改开机第一屏，但可以继续下面的修改";;
 	esac
-else echo "- 开关已关闭，跳过修改 splash/logo镜像"; echo 3 >$ColorOS_MOD_SIGN/splash; fi
+else echo "- 跳过修改 splash/logo镜像"; echo 3 >$ColorOS_MOD_SIGN/splash; fi
 
 echo2n
 case "$switch_cs" in
@@ -157,7 +156,7 @@ case "$switch_cs" in
 esac
 
 FUN_fccas() {
-	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "未知错误！请联系开发者修复！"
+	sed -i '/disable_fp_blind_unlock/d' $pfd || abort "﹗ 未知错误！请联系开发者修复！"
 	sed -i -e '/enable_fp_blind_unlock/d' -e '/<extend_features>/a <app_feature name="com.android.systemui.enable_fp_blind_unlock"/>' $pfd && echo "试图去除对息屏指纹盲解的禁用，可能有效"
 	sed -i '/disable_volume_blur/d' $pfd && echo "[删除] 禁用音量面板模糊"
 }
@@ -173,6 +172,7 @@ FUN_rcc(){
 	sed -i 's/enableRateOverride="true/enableRateOverride="false/g' $pfd && echo "[禁用] surfaceview，texture场景降帧"
 	sed -i 's/disableViewOverride="true/disableViewOverride="false/g' $pfd && echo "[禁用] disableViewOverride"
 	sed -i 's/inputMethodLowRate="true/inputMethodLowRate="false/g' $pfd && echo "[禁用] 输入法降帧"
+	sed -i 's/adfr="true/adfr="false/g' $pfd && echo "[禁用] 动态刷新率"
 }
 ckFUN "$src_rrc" "屏幕刷新率重点应用名单" FUN_rcc "注意：系统设置刷新率仍然生效"
 
@@ -186,9 +186,11 @@ FUN_ovc(){
 	sed -n -e '/"frtc/i {' -e '/"frtc/a }' -e '/"frtc/p' $pfd >>$TMPDIR/adfrkey
 	sed -i -e '1i [' -e '$a ]' $TMPDIR/adfrkey
 	cp -f $TMPDIR/adfrkey $pfd
-	sed -i -e '/"touch_idle"/s/true,/false,/' -e '/"hw_enable"/s/true,/false,/' -e '/"sw_enable"/s/true,/false,/'  -e '/"adfr_enable"/s/true,/false,/' $pfd && echo "[禁用] touch_idle, hw, sw, adfr"
+	sed -i -e '/"touch_idle"/s/true/false/' -e '/"hw_enable"/s/true/false/' -e '/"sw_enable"/s/true/false/' -e '/"adfr_enable"/s/true/false/' $pfd && echo "[禁用] touch_idle, hw, sw, adfr"
 }
-[[ "$product_brand" == "realme" ]] && ckFUN "$src_ovc" "动态刷新率(adfr) " FUN_ovc
+if [ $API -gt 30 ]; then
+	[[ "$product_brand" == "realme" ]] && ckFUN "$src_ovc" "动态刷新率(adfr) " FUN_ovc;
+fi;
 
 FUN_mdpl(){
 	sed -i -e '/<fps>/d' -e '/<vsync>/d' $pfd && echo "[删除] 锁帧、垂直同步设置"
@@ -208,14 +210,14 @@ FUN_fcl(){
 </extend_features>" >$ColorOS_MOD_INSTALL_PATH$1
 	echo "✔ 修改$2完成"
 }
-FUN_fcl "$src_fcl" "Carlink feature 车联特性文件"
+[ -f "$src_fcl" ] && FUN_fcl "$src_fcl" "Carlink feature 车联特性文件"
 
 FUN_stcc(){
 	sed -n -e '/specificScene/p' -e '/com\.tencent\.mobileqq_\(scene_\)*103/,/com.tencent.mobileqq_\(scene_\)*103/p' $pfd >$TMPDIR/specificScene && echo "[备份] 腾讯QQ 微信 WhatsApp specificScene"
-	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "[删除]  specificScene 与 /specificScene 区间行"
+	sed -i '/specificScene/,/\/specificScene/d' $pfd && echo "[删除] specificScene 与 /specificScene 区间行"
 	sed -i '/\/screenOff/ r specificScene' $pfd && rm -rf $TMPDIR/specificScene && echo "[写回] 腾讯QQ specificScene"
 	sed -n -e '/specific>/p' -e '/com\.oplus\.camera>/,/com\.oplus\.camera>/p' $pfd >$TMPDIR/specific && echo "[备份] Oplus相机 specific"
-	sed -i '/specific>/,/\/specific>*/d' $pfd && echo "[删除]  specific 与 /specific 区间行"
+	sed -i '/specific>/,/\/specific>*/d' $pfd && echo "[删除] specific 与 /specific 区间行"
 	sed -i '/\/specificScene/ r specific' $pfd && rm -rf $TMPDIR/specific && echo "[写回] Oplus相机 specific"
 sed -i 's/fps="[0-9]*/fps="0/g' $pfd && echo "[禁用] 温控锁帧率"
 sed -i 's/cpu="-*[0-9]*/cpu="-1/g' $pfd && echo "[修改] CPU -1"
@@ -223,12 +225,12 @@ sed -i 's/gpu="-*[0-9]*/gpu="-1/g' $pfd && echo "[修改] GPU -1"
 sed -i 's/cameraBrightness="[0-9]*/cameraBrightness="255/g' $pfd && echo "[修改] 相机亮度 255"
 	sed -i -e 's/restrict="[0-9]*/restrict="0/g' -e 's/brightness="[0-9]*/brightness="0/g' -e 's/charge="[0-9]*/charge="0/g' -e 's/modem="[0-9]*/modem="0/g' -e 's/disFlashlight="[0-9]*/disFlashlight="0/g' -e 's/stopCameraVideo="[0-9]*/stopCameraVideo="0/g' -e 's/disCamera="[0-9]*/disCamera="0/g' -e 's/disWifiHotSpot="[0-9]*/disWifiHotSpot="0/g' -e 's/disTorch="[0-9]*/disTorch="0/g' -e 's/disFrameInsert="[0-9]*/disFrameInsert="0/g' -e 's/refreshRate="[0-9]*/refreshRate="0/g' -e 's/disVideoSR="[0-9]*/disVideoSR="0/g' -e 's/disOSIE="[0-9]*/disOSIE="0/g' -e 's/disHBMHB="[0-9]*/disHBMHB="0/g' $pfd && echo "[禁用] 部分限制： 亮度 充电 调制解调器 禁用手电 停止录像 禁拍照 禁热点 禁Torch 禁插帧 刷新率 禁视频SR 禁超感画质引擎 disHBMHB"
 }
-ckFUN "$src_stcc" " ColorOS 12~13 系统高温控制配置" FUN_stcc
+ckFUN "$src_stcc" " ColorOS 系统高温控制配置" FUN_stcc
 
-ckFUN "$src_stcc_gt" " realmeUI 3.0~4.0 GT模式高温控制器" FUN_stcc
+ckFUN "$src_stcc_gt" " realmeUI GT模式高温控制器" FUN_stcc
 
 FUN_shtp(){
-	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "[禁用] $2"
+	sed -i '/HighTemperatureProtectSwitch>/s/true/false/g' $pfd && echo "[禁用] 高温保护"
 	sed -i '/HighTemperatureShutdownSwitch>/s/true/false/g' $pfd && echo "[禁用] 高温关机"
 	sed -i '/HighTemperatureFirstStepSwitch>/s/true/false/g' $pfd && echo "[禁用] 高温第一步骤"
 	sed -i '/HighTemperatureDisableFlashSwitch>/s/true/false/g' $pfd && echo "[禁用] 高温禁用手电"
@@ -245,7 +247,6 @@ FUN_shtp(){
 }
 ckFUN "$src_shtp" "高温保护" FUN_shtp "请避免手机长时间处于高温状态（约44+℃）\n* 高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
 
-
 FUN_stc(){
 	sed -i '/is_upload_dcs>/s/1/0/g' $pfd && echo "[禁用] 上传dcs"
 	sed -i '/is_upload_log>/s/1/0/g' $pfd && echo "[禁用] 上传log"
@@ -261,14 +262,14 @@ FUN_stc(){
 	sed -i '/preheat_threshold>/s/>[0-9]*</>540</g' $pfd && echo "[修改] preheat_threshold为540"
 	sed -i '/preheat_dex_oat_threshold>/s/>[0-9]*</>520</g' $pfd && echo "[修改] preheat_dex_oat_threshold为520"
 }
-ckFUN "$src_stc" " ColorOS 12~13 高热配置" FUN_stc "请避免手机长时间处于高温状态（约44+℃）\n* 高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
+ckFUN "$src_stc" "高热配置" FUN_stc "请避免手机长时间处于高温状态（约44+℃）\n* 高温可加速电池去世，甚至导致手机故障、主板损坏、火灾等危害！"
 
 echo2n
 if [ -d $src_horae ]; then echo "- 检测到存在加密温控目录，尝试模块替换为空"
 REPLACE="
 /system/system_ext/etc/horae
 "
-else echo "未定义 加密温控 目录"; fi
+else echo "✘ 不存在定义的加密温控目录"; fi
 
 echo2n
 if [[ "$switch_thermal" == "TRUE" ]]; then
@@ -290,7 +291,7 @@ if [[ "$switch_thermal" == "TRUE" ]]; then
 		# elif [ $wint -lt 105000 ]; then echo 105000 >$pfd; echoTt
 		fi; done
 	echo "✔ 修改温控节点温度阈值完成"
-else echo "✘ 开关已关闭，跳过修改温度阈值";fi
+else echo "- 跳过修改温度阈值";fi
 
 # find /system /vendor /product /odm /system_ext -type f -iname "*thermal*" -exec ls -s -h {} \; 2>/dev/null | sed '/hardware/d' ;# swap to 0, may cause STUCK.
 
@@ -304,12 +305,12 @@ if [ ! -z "$list_hybridswap" ]; then echo "- 尝试在安装有面具的情况�
 	# 欧加内存拓展管理脚本为 '/product/bin/init.oplus.nandswap.sh'
 	resetprop persist.sys.oplus.nandswap.condition true
 	echo 1 >/sys/block/zram0/hybridswap_dev_life
-else echo "跳过了激活内存拓展"; echo 3 >$ColorOS_MOD_SIGN/hybridswap; fi
+else echo "- 跳过激活内存拓展"; echo 3 >$ColorOS_MOD_SIGN/hybridswap; fi
 
 FUN_smac(){
 	sed -i 's/maxNum name="[0-9]*/maxNum name="2000/' $pfd && echo "[修改] 分身应用数量限制为2000" ;# 2000 for 21th century.
-	for APKN in $APKNs; do multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-		sed -i -e '/'"$multiAPKN"'$/d' -e'/<allowed>/a'"$multiAPKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2
+	for APKN in $APKNs; do multiAPKN="<item name=\"$APKN\" \/>"
+		sed -i -e "/$multiAPKN/d" -e '/<allowed>/a'"$multiAPKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2
 	done
 	sed -i '1i'"appClonerList=$ColorOS_MOD_DIR$pfdDir/${SRC##*/}" $ColorOS_MOD_INSTALL_PATH/service.sh
 }
@@ -319,58 +320,66 @@ echo -e "\n\n\n\n######### 以下编辑 /data/ 目录内文件 #########"
 
 FUN_blacklistMv(){
 	for APKN in $blacklistAPKNs; do
-		sed -i '/'"$APKN"'/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行" >&2
+		sed -i "/$APKN/d" $pfd && echo "[删除] 含有黑名单应用包名$APKN的行" >&2
 	done
 }
 ckFUN "$src_blacklistMv" "启动管理" FUN_blacklistMv
 
 ckFUN "$src_blacklistMv3c" "启动V3配置列表" FUN_blacklistMv
 
-apknda() {
-	for APKN in $APKNs; do
-		sed -i -e '/'"$APKN"'$/d' -e '$a'"$APKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2;
-	done;
-}
-# add path of $SRC a varible named "${2}List" to $ColorOS_MOD_INSTALL_PATH/service.sh
+# Add path of $SRC as a varible named "${2}List" to 'service.sh' for update list at restarted.
 apknlu() {
 	if [[ "$SRC" == "$1" ]]; then
-		sed -i '1i'"${2}List=$ColorOS_MOD_DIR$pfdDir/${SRC##*/}" $ColorOS_MOD_INSTALL_PATH/service.sh;
-		echo 1 >$ColorOS_MOD_SIGN/${1##*/};
+		sed -i '2i'"${2}List=$ColorOS_MOD_DIR$pfdDir/${SRC##*/}" $ColorOS_MOD_INSTALL_PATH/service.sh;
 	fi;
 }
 
 FUN_sdmtam(){
-	for APKN in $APKNs; do darkAPKN="<p\ attr\=\"$APKN\"\/>"
-		sed -i -e '/'"$darkAPKN"'$/d' -e '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2;
-	done
-	for APKN in $baddark; do darkAPKN="<p\ attr\=\"$APKN\"\/>"
-		sed -i '/'"$darkAPKN"'/d' $pfd && echo "[删除] 含有 'config/blacklist_dark' 列出的 $APKN 的行" >&2
-	done
-	tplFUN ${src_sdmtam%/*}/open_app "暗色模式开启应用名单" apknda
-	# tplFUN 会重置 $pfd
-	for APKN in $baddark; do sed -i '/'"$APKN"'$/d' $pfd && echo "	[删除] 含有 'config/blacklist_dark' 列出的 $APKN 的行" >&2; done
-	local SRC=${src_sdmtam%/*}/open_app ; apknlu $SRC dark
+	# delete incompatible app package names
+	echo "$APKNs" >$TMPDIR/APKNs;
+	for b in `cat $ColorOS_MOD_CONFIG/blacklist_dark`; do
+		sed -i "/$APKN/d" $pfd && echo "[删除] 含有 'config/blacklist_dark' 列出的 $APKN 的行" >&2;
+		sed -i "/$b\$/d" $TMPDIR/APKNs;
+	done;
+	trueDark=`cat $TMPDIR/APKNs`;
+	for APKN in $trueDark; do darkAPKN="<p attr=\"$APKN\"\/>";
+		sed -i -e "/$APKN/d" -e '/<\/filter-conf>/i'"$darkAPKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2;
+	done;
+	apknlu $src_sdmtam dark;
+	function co(){
+		dca=${src_sdmtam%/*}/$1;
+		rm -rf $dca; echo -e "\n" >$dca; set_perm 1000 1000 600 600 $dca;
+		mdca=$ColorOS_MOD_INSTALL_PATH$dca;
+		cp -f "$TMPDIR/APKNs" "$mdca";
+		echo "mount --bind \$MODDIR$dca $dca" >>$pfds;
+	};
+	co open_app;
+	co click_app;
+	local SRC=${src_sdmtam%/*}/click_app; apknlu "$SRC" darkC;
+	local SRC=${src_sdmtam%/*}/open_app; apknlu $SRC darkO;
 }
-ckFUN "$src_sdmtam" "暗色模式第三方应用管理" FUN_sdmtam "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。部分应用开启后可能会出现显示异常"
+ckFUN "$src_sdmtam" "暗色模式第三方应用管理" FUN_sdmtam "“三方应用暗色”可以将自身不支持暗色的应用调整为适合暗色模式下使用的效果。\n* 部分应用开启后可能会出现显示异常，\n* 可以将其包名从 $ColorOS_MOD_DIR${src_sdmtam%/*}/open_app\n　　　　开启名单↑删除"
 
 apknAdd() {
-	apknda
-	for APKN in $blacklistAPKNs; do sed -i '/'"$APKN"'$/d' $pfd && echo "[删除] 含有黑名单应用包名$APKN的行" >&2; done
-	apknlu $src13_awl bootallow13
-	apknlu $src_acwl associated
+	for APKN in $APKNs; do
+		sed -i -e "/$APKN\$/d" -e '$a'"$APKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2;
+	done;
+	for APKN in $blacklistAPKNs; do sed -i "/$APKN\$/d" $pfd && echo "[删除] 含有黑名单应用包名$APKN的行" >&2; done;
+	apknlu $src_awl autostartWhite;
+	apknlu $src_bwl bootWhite;
 }
 # ckFUN "$src_bootwhitelist" " ColorOS 11~12 自启动白名单 或 ColorOS 13 允许自启动应用名单" apknAdd
 if [ $API -lt 33 ]; then
-	ckFUN "$src_bootwhitelist" " ColorOS 11~12 自启动白名单" apknAdd
+	ckFUN "$src_bwl" " ColorOS 11~12 自启动白名单" apknAdd
 fi
 
 # ckFUN "$src_asw" " ColorOS 11 允许关联启动名单" apknAdd
 
 # ckFUN "$src_acwl" " ColorOS 12~13 关联启动名单白名单" apknAdd
 
-# ckFUN "$src12_bootallow" " ColorOS 11~12 允许自启动应用名单" apknAdd "" "①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
+# ckFUN "$src_ba" " ColorOS 11~12 允许自启动应用名单" apknAdd "" "①注释了定义变量，②安卓13 设备，不存在bootallow.txt"
 
-ckFUN "$src13_awl" " ColorOS 13 自启动白名单" apknAdd "" "①注释了定义变量，②不存在autostart_white_list.txt"
+ckFUN "$src_awl" " ColorOS 13 自启动白名单" apknAdd "" "①注释了定义变量，②不存在autostart_white_list.txt"
 
 FUN_bgApp(){
 	sed -i '/lock_app_limit/s/value="[0-9]*/value="2000/' $pfd && echo "[修改] 锁定后台数量限制为2000"
@@ -378,12 +387,12 @@ FUN_bgApp(){
 ckFUN "$src_bgApp" "系统桌面 (OPPO/Oplus launcher) 锁定后台数量限制配置" FUN_bgApp
 
 FUN_spea(){
-	sed -i 's/protectapp.*protectapp>/protectapp \/>/g' $pfd && echo "[修改] 清空<protectapp />标签"
+	sed -i 's|protectapp.*protectapp>|protectapp />|g' $pfd && echo "[修改] 清空<protectapp />标签"
 }
 ckFUN "$src_spea" "安全支付的启用应用名单" FUN_spea "请自行注意网络、ROOT权限应用等环境的安全性！谨防上当受骗！"
 
 # 注释掉多余挂载命令行
-sed -i 's/^mount --bind \$MODDIR\/system\//# &/g' $pfds
+sed -i 's|^mount --bind \$MODDIR/system/|# &|g' $pfds
 
 set_perm_recursive $ColorOS_MOD_INSTALL_PATH 0 0 755 644
 
