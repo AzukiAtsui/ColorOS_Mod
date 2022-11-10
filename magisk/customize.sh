@@ -348,7 +348,7 @@ FUN_sdmtam(){
 	apknlu $src_sdmtam dark;
 	function co(){
 		dca=${src_sdmtam%/*}/$1;
-		rm -rf $dca; echo -e "\n" >$dca; set_perm 1000 1000 600 600 $dca;
+		rm -rf $dca; echo '' >$dca; set_perm $dca 1000 1000 600 600;
 		mdca=$ColorOS_MOD_INSTALL_PATH$dca;
 		cp -f "$TMPDIR/APKNs" "$mdca";
 		echo "mount --bind \$MODDIR$dca $dca" >>$pfds;
