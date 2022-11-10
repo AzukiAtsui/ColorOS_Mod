@@ -24,7 +24,7 @@ MODSCRIPT=$MODDIR/script
 MODSIGN=$MODDIR/sign
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
-  sleep 1
+	sleep 1;
 done
 
 # Make SafetyNet pass
@@ -44,31 +44,34 @@ source $MODCONFIG/blacklist
 
 ## function for simple lists.
 anapkn() {
-  if [[ -f $1 && "$(cat $MODSIGN/${1##*/})" == "1" ]]; then
-      sed -i -e '/'"$APKN"'$/d' -e '$a'"$APKN" $1
-  fi
+	if [[ -f $1 ]]; then
+		sed -i -e "/$APKN\$/d" -e '$a'"$APKN" $1;
+	fi;
 }
 bdapkn() {
-  if [[ -f $1 && "$(cat $MODSIGN/${1##*/})" == "1" ]]; then
-      sed -i -e '/'"$APKN"'$/d' $1
-  fi
+	if [[ -f $1 ]]; then
+		sed -i -e "/$APKN\$/d" $1;
+	fi;
 }
 ### mod
 for APKN in $APKNs; do
-	multiAPKN="<item\ name\=\"$APKN\"\ \/>"
-	[[ -f $appClonerList ]] && sed -i -e '/'"$multiAPKN"'$/d' -e '/<allowed>/a'"$multiAPKN" $appClonerList
-	anapkn $bootallow13List
-	anapkn $associatedList
-	anapkn $darkList
+	multiAPKN="<item name=\"$APKN\" \/>";
+	[ -f $appClonerList ] && sed -i -e "/$multiAPKN/d" -e '/<allowed>/a'"$multiAPKN" $appClonerList;
+	darkAPKN="<p attr=\"$APKN\"\/>";
+	[ -f $darkList ] && sed -i -e "/$APKN/d" -e '/<\/filter-conf>/i'"$darkAPKN" $darkList;
+	anapkn $bootWhiteList;
+	anapkn $autostartWhiteList;
+	anapkn $darkOList;
+	anapkn $darkCList;
 done
 
 for APKN in $blacklistAPKNs; do
-	bdapkn $bootallow13List
-	bdapkn $associatedList
+	bdapkn $bootWhiteList;
+	bdapkn $autostartWhiteList;
 done
 
 for APKN in $(cat $MODCONFIG/blacklist_dark); do
-	bdapkn $darkList
+	bdapkn $darkOList;
 done
 
 # disable service.sh
