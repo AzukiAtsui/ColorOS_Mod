@@ -312,7 +312,7 @@ FUN_smac(){
 	for APKN in $APKNs; do multiAPKN="<item name=\"$APKN\" \/>"
 		sed -i -e "/$multiAPKN/d" -e '/<allowed>/a'"$multiAPKN" $pfd && echo "去重添加包名$APKN 到$NM" >&2
 	done
-	sed -i '1i'"appClonerList=$ColorOS_MOD_DIR$pfdDir/${SRC##*/}" $ColorOS_MOD_INSTALL_PATH/service.sh
+	sed -i '2i'"appClonerList=$ColorOS_MOD_DIR$pfdDir/${SRC##*/}" $ColorOS_MOD_INSTALL_PATH/service.sh
 }
 ckFUN "$src_smac" "应用分身配置（App cloner config）" FUN_smac
 
